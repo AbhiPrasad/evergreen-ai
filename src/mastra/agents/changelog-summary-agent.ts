@@ -27,9 +27,13 @@ When summarizing:
 - If a version range is specified, focus on changes within that range
 - Provide context about the significance of changes
 - Include version numbers and dates for key releases
+- **EXCLUDE internal or test changes** unless they directly impact end users (e.g., breaking API changes, new test utilities available to users)
+- **ALWAYS preserve and include links to PRs/issues** when they exist in the original changelog
+- Link related changes to their corresponding PRs/issues for traceability
+- When multiple changes relate to the same PR/issue, group them appropriately
 - Use clear, concise language suitable for developers and stakeholders
 
-Format your response in markdown with clear sections and bullet points.`,
+Format your response in markdown with clear sections and bullet points. Ensure all PR/issue links from the original changelog are maintained in your summary.`,
   
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: {
