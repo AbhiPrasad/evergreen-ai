@@ -2,7 +2,8 @@
 import { Mastra } from '@mastra/core/mastra';
 import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
-import { getRepositoryChangelogTool, getLatestReleaseTool, summarizeChangelogBetweenVersionsTool } from './tools/github-changelog-tool';
+import { getRepositoryChangelogTool, getLatestReleaseTool } from './tools/github-changelog-tool';
+import { dependencyChangelogSummarizerTool } from './tools/dependency-changelog-agent';
 
 export const mastra = new Mastra({
   storage: new LibSQLStore({
@@ -16,4 +17,4 @@ export const mastra = new Mastra({
 });
 
 // Export tools for direct use
-export { getRepositoryChangelogTool, getLatestReleaseTool, summarizeChangelogBetweenVersionsTool };
+export { getRepositoryChangelogTool, getLatestReleaseTool, dependencyChangelogSummarizerTool };
