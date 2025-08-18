@@ -1,7 +1,7 @@
 {
-  "name": "@sentry/evergreen-ai-agents",
+  "name": "@sentry/evergreen-ai-mcp",
   "version": "0.0.1",
-  "description": "Mastra tools and agents for AI workflows",
+  "description": "Boilerplate package using evergreen-ai-agents",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,8 @@
     "mastra",
     "ai",
     "tools",
-    "agents"
+    "agents",
+    "mcp"
   ],
   "author": "",
   "license": "MIT",
@@ -34,15 +35,9 @@
     "node": ">=20.9.0"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.2.12",
-    "@mastra/core": "^0.13.2",
-    "@mastra/libsql": "^0.13.2",
-    "@mastra/loggers": "^0.10.6",
-    "@mastra/memory": "^0.12.2",
-    "zod": "^3.25.76"
+    "@sentry/evergreen-ai-agents": "0.0.1"
   },
   "devDependencies": {
-    "@mastra/evals": "^0.12.0",
     "@types/node": "^24.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",

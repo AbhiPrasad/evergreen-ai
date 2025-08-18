@@ -1,6 +1,6 @@
 {
   "name": "evergreen-ai",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Evergreen AI Monorepo with Mastra tools and examples",
   "private": true,
   "workspaces": [
