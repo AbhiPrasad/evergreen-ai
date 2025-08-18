@@ -26,5 +26,8 @@ export const mastra = new Mastra({
 // Export tools for direct use
 export { fetchChangelogTool, gitDiffTool, githubPRParserTool };
 
+// Export types from tools
+export type { FetchChangelogOutput, ChangelogSection } from './tools/fetch-changelog-tool';
+
 // Export agents for direct use
 export { changelogSummaryAgent, gitDiffSummaryAgent };

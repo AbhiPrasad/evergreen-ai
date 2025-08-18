@@ -2,9 +2,28 @@
 
 This document describes the Git Diff Tool, GitHub PR Parser Tool, and Git Diff Summary Agent added to the Mastra framework.
 
+## Type Safety with Output Schemas
+
+All tools now include comprehensive output schemas using Zod, providing:
+
+- **Full TypeScript Support**: Strongly-typed outputs with exported types
+- **IDE Autocomplete**: IntelliSense for all properties and nested objects
+- **Runtime Validation**: Ensures output conforms to expected structure
+- **Better Documentation**: Schema descriptions explain each field
+- **Error Prevention**: Catch type mismatches at compile time
+- **Confident Coding**: Know exactly what data you're working with
+
+Example:
+```typescript
+import { gitDiffTool, type GitDiffOutput } from '@mastra/tools/git-diff-tool';
+
+const result: GitDiffOutput = await gitDiffTool.execute({ context: { base: 'main' } });
+// TypeScript knows all properties: result.stats.filesChanged, result.commitInfo.base, etc.
+```
+
 ## Git Diff Tool
 
-The `gitDiffTool` is a powerful tool for generating git diffs with various options and formats.
+The `gitDiffTool` is a powerful tool for generating git diffs with various options and formats, now with full TypeScript support through output schemas.
 
 ### Features
 
@@ -68,21 +87,49 @@ const fileDiff = await gitDiffTool.execute({
 - `diffType` (optional): Output format - 'unified', 'name-only', 'name-status', 'stat' (default: 'unified')
 - `excludePatterns` (optional): Array of patterns to exclude from diff
 
-### Output
+### Output Schema
 
-The tool returns an object with:
-- `diff`: The raw diff output
-- `stats`: Parsed statistics including files changed, insertions, deletions
-- `repository`: Repository path used
-- `base`: Base reference used
-- `compare`: Compare reference used
-- `currentBranch`: Current git branch
-- `commitInfo`: Information about base and compare commits (if applicable)
-- `command`: The git command that was executed
+The tool provides strongly-typed output with full TypeScript support:
+
+```typescript
+import { type GitDiffOutput, type DiffStats, type FileChange } from '@mastra/tools/git-diff-tool';
+
+// Main output type
+type GitDiffOutput = {
+  diff: string;                      // Raw git diff output
+  stats: DiffStats;                  // Parsed diff statistics
+  repository: string;                // Repository path used
+  base: string;                      // Base reference
+  compare: string;                   // Compare reference
+  currentBranch: string;             // Current git branch
+  commitInfo: {                      // Commit information
+    base?: CommitInfo;
+    compare?: CommitInfo;
+  };
+  diffType: 'unified' | 'name-only' | 'name-status' | 'stat';
+  command: string;                   // Executed git command
+}
+
+// Diff statistics
+type DiffStats = {
+  filesChanged: number;              // Total files changed
+  insertions: number;                // Total lines added
+  deletions: number;                 // Total lines removed
+  files: FileChange[];               // Individual file changes
+}
+
+// File change details
+type FileChange = {
+  path: string;                      // File path
+  status: 'added' | 'modified' | 'deleted' | 'renamed';
+  insertions?: number;               // Lines added in this file
+  deletions?: number;                // Lines removed in this file
+}
+```
 
 ## GitHub PR Parser Tool
 
-The `githubPRParserTool` extracts git diff inputs from GitHub pull request URLs, making it easy to analyze PRs.
+The `githubPRParserTool` extracts git diff inputs from GitHub pull request URLs, making it easy to analyze PRs with full type safety.
 
 ### Features
 
@@ -128,18 +175,54 @@ const detailedInfo = await githubPRParserTool.execute({
 - `includeCommits` (optional): Whether to fetch individual commits from the PR (default: false)
 - `includeDiffUrls` (optional): Whether to include GitHub diff/patch URLs (default: false)
 
-### Output
+### Output Schema
 
-The tool returns comprehensive PR information including:
+The tool provides comprehensive, strongly-typed PR information:
 
-- **Basic Info**: PR number, title, state, draft status, timestamps
-- **Repository Info**: Owner, name, clone URLs
-- **Git Diff Inputs**: Base/compare branches and SHAs, cross-repo detection
-- **Git Commands**: Ready-to-use commands for local work
-- **Git Diff Tool Config**: Pre-configured inputs for the git diff tool
-- **Stats**: Commits, additions, deletions, changed files
-- **Metadata**: Author, labels
-- **Optional**: Commits list, diff URLs
+```typescript
+import { type GitHubPROutput, type GitDiffInputs, type PRStats } from '@mastra/tools/github-pr-parser-tool';
+
+// Main output type
+type GitHubPROutput = {
+  prNumber: number;                  // Pull request number
+  title: string;                     // PR title
+  state: string;                     // PR state (open, closed, merged)
+  draft: boolean;                    // Whether PR is a draft
+  merged: boolean;                   // Whether PR has been merged
+  mergeable: boolean | null;         // Whether PR is mergeable
+  created_at: string;                // Creation timestamp
+  updated_at: string;                // Last update timestamp
+  repository: Repository;            // Base repository info
+  gitDiffInputs: GitDiffInputs;      // Extracted git diff inputs
+  author: Author;                    // PR author info
+  stats: PRStats;                    // PR statistics
+  labels: Label[];                   // PR labels
+  commits?: PRCommit[];              // Commits (if requested)
+  diffUrls?: DiffUrls;               // GitHub URLs (if requested)
+  gitCommands: GitCommands;          // Helpful git commands
+  gitDiffToolConfig: GitDiffToolConfig; // Ready-to-use config
+}
+
+// Git diff inputs for the PR
+type GitDiffInputs = {
+  base: string;                      // Base branch name
+  compare: string;                   // Compare branch name
+  baseSha: string;                   // Base commit SHA
+  headSha: string;                   // Head commit SHA
+  isCrossRepository: boolean;        // Is this a fork PR?
+  headRepository: Repository | null; // Head repo for forks
+}
+
+// PR statistics
+type PRStats = {
+  commits: number;                   // Number of commits
+  additions: number;                 // Lines added
+  deletions: number;                 // Lines removed
+  changedFiles: number;              // Files changed
+}
+```
+
+The output includes all the information needed to analyze a PR, with type safety ensuring you can access all properties confidently.
 
 ### Integration with Git Diff Tool
 
@@ -249,7 +332,7 @@ The agent provides structured analysis including:
 Both the tool and agent are integrated into the Mastra framework:
 
 ```typescript
-import { mastra } from './src/mastra';
+import { mastra } from '@evergreen-ai/mastra';
 
 // Access through Mastra instance
 const gitDiff = mastra.tools.gitDiff;
@@ -314,12 +397,12 @@ The tools include comprehensive tests:
 
 ### Git Diff Tool Tests
 ```bash
-npm test src/mastra/tools/git-diff-tool.test.ts
+npm test packages/mastra/src/tools/git-diff-tool.test.ts
 ```
 
 ### GitHub PR Parser Tool Tests
 ```bash
-npm test src/mastra/tools/github-pr-parser-tool.test.ts
+npm test packages/mastra/src/tools/github-pr-parser-tool.test.ts
 ```
 
 Tests cover:

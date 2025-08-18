@@ -1,6 +1,79 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
+// Define schemas for nested objects
+const repositorySchema = z.object({
+  owner: z.string().describe('Repository owner/organization'),
+  name: z.string().describe('Repository name'),
+  fullName: z.string().describe('Full repository name (owner/repo)'),
+  cloneUrl: z.string().url().describe('HTTPS clone URL'),
+  sshUrl: z.string().optional().describe('SSH clone URL')
+});
+
+const gitDiffInputsSchema = z.object({
+  base: z.string().describe('Base branch name'),
+  compare: z.string().describe('Compare branch name'),
+  baseSha: z.string().describe('Base commit SHA'),
+  headSha: z.string().describe('Head commit SHA'),
+  isCrossRepository: z.boolean().describe('Whether this is a cross-repository PR (fork)'),
+  headRepository: repositorySchema.nullable().describe('Head repository info for cross-repo PRs')
+});
+
+const authorSchema = z.object({
+  login: z.string().describe('GitHub username'),
+  type: z.string().describe('User type (User, Organization, etc.)')
+});
+
+const prStatsSchema = z.object({
+  commits: z.number().describe('Number of commits in the PR'),
+  additions: z.number().describe('Total lines added'),
+  deletions: z.number().describe('Total lines removed'),
+  changedFiles: z.number().describe('Number of files changed')
+});
+
+const labelSchema = z.object({
+  name: z.string().describe('Label name'),
+  color: z.string().describe('Label color (hex)'),
+  description: z.string().nullable().describe('Label description')
+});
+
+const commitSchema = z.object({
+  sha: z.string().describe('Commit SHA'),
+  message: z.string().describe('Commit message'),
+  author: z.object({
+    name: z.string().describe('Author name'),
+    email: z.string().describe('Author email'),
+    date: z.string().describe('Commit date')
+  }),
+  url: z.string().url().describe('URL to view the commit')
+});
+
+const diffUrlsSchema = z.object({
+  html: z.string().url().describe('PR web page URL'),
+  diff: z.string().url().describe('Raw diff URL'),
+  patch: z.string().url().describe('Patch file URL'),
+  commits: z.string().url().describe('Commits page URL'),
+  files: z.string().url().describe('Changed files page URL')
+});
+
+const gitCommandsSchema = z.object({
+  fetchPR: z.string().describe('Command to fetch PR branch locally'),
+  checkoutPR: z.string().describe('Command to checkout PR branch'),
+  diffCommand: z.string().describe('Command to diff using git diff tool inputs'),
+  addRemote: z.string().optional().describe('Command to add remote for cross-repo PRs'),
+  fetchFromFork: z.string().optional().describe('Command to fetch from fork'),
+  diffCrossRepo: z.string().optional().describe('Command to diff cross-repo PR')
+});
+
+const gitDiffToolConfigSchema = z.object({
+  base: z.string().describe('Base reference for git diff tool'),
+  compare: z.string().describe('Compare reference for git diff tool'),
+  alternativeConfig: z.object({
+    base: z.string().describe('Alternative base using SHA'),
+    compare: z.string().describe('Alternative compare using SHA')
+  }).describe('Alternative config using SHAs for precision')
+});
+
 // Tool for parsing GitHub PR URLs and extracting git diff inputs
 export const githubPRParserTool = createTool({
   id: 'github-pr-parser',
@@ -9,6 +82,25 @@ export const githubPRParserTool = createTool({
     prUrl: z.string().url().describe('GitHub pull request URL (e.g., https://github.com/owner/repo/pull/123)'),
     includeCommits: z.boolean().default(false).describe('Whether to include individual commit SHAs from the PR'),
     includeDiffUrls: z.boolean().default(false).describe('Whether to include GitHub diff/patch URLs'),
+  }),
+  outputSchema: z.object({
+    prNumber: z.number().describe('Pull request number'),
+    title: z.string().describe('PR title'),
+    state: z.string().describe('PR state (open, closed, merged)'),
+    draft: z.boolean().describe('Whether the PR is a draft'),
+    merged: z.boolean().describe('Whether the PR has been merged'),
+    mergeable: z.boolean().nullable().describe('Whether the PR is mergeable'),
+    created_at: z.string().describe('PR creation timestamp'),
+    updated_at: z.string().describe('PR last update timestamp'),
+    repository: repositorySchema.describe('Base repository information'),
+    gitDiffInputs: gitDiffInputsSchema.describe('Extracted git diff inputs'),
+    author: authorSchema.describe('PR author information'),
+    stats: prStatsSchema.describe('PR statistics'),
+    labels: z.array(labelSchema).describe('PR labels'),
+    commits: z.array(commitSchema).optional().describe('Individual commits (if includeCommits=true)'),
+    diffUrls: diffUrlsSchema.optional().describe('GitHub diff URLs (if includeDiffUrls=true)'),
+    gitCommands: gitCommandsSchema.describe('Helpful git commands for working with the PR'),
+    gitDiffToolConfig: gitDiffToolConfigSchema.describe('Ready-to-use config for git diff tool')
   }),
   execute: async ({ context }) => {
     const { prUrl, includeCommits, includeDiffUrls } = context;

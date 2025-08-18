@@ -1,4 +1,4 @@
-import { fetchChangelogTool, type FetchChangelogOutput, type ChangelogSection } from '../src/mastra/tools/fetch-changelog-tool';
+import { fetchChangelogTool, type FetchChangelogOutput, type ChangelogSection } from '@evergreen-ai/mastra';
 
 /**
  * Example demonstrating the use of fetch-changelog-tool with TypeScript types

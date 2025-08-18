@@ -134,7 +134,12 @@ describe('GitHub PR Parser Tool', () => {
         baseSha: 'abc123',
         headSha: 'def456',
         isCrossRepository: false,
-        headRepository: null
+        headRepository: {
+          owner: 'owner',
+          name: 'repo',
+          fullName: 'owner/repo',
+          cloneUrl: 'https://github.com/owner/repo.git'
+        }
       });
 
       expect(result.gitDiffToolConfig).toEqual({

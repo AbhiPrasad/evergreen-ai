@@ -8,7 +8,13 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@evergreen-ai/mastra": ["packages/mastra/src/index.ts"],
+      "@evergreen-ai/mastra/*": ["packages/mastra/src/*"]
+    }
   },
-  "include": ["src/**/*", "test"]
+  "include": ["packages/**/*", "globalSetup.ts", "testSetup.ts"],
+  "exclude": ["node_modules", "dist", "**/dist"]
 }

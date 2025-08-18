@@ -17,6 +17,22 @@ const changelogSectionSchema = z.object({
   prLinks: z.array(prLinkSchema).describe('Extracted PR and issue links from this section')
 });
 
+// Export type definitions
+export type ChangelogSection = z.infer<typeof changelogSectionSchema>;
+
+// Define the output schema outside the tool to allow type extraction
+const outputSchema = z.object({
+  changelog: z.array(changelogSectionSchema).describe('Array of parsed changelog sections'),
+  totalSections: z.number().describe('Total number of sections found in the changelog'),
+  filteredSections: z.number().describe('Number of sections after version filtering'),
+  versionRange: z.string().describe('Description of the version range used for filtering'),
+  sourceFile: z.string().describe('The changelog file that was found and used'),
+  repository: z.string().describe('Repository in format owner/repo'),
+  branch: z.string().describe('Branch from which the changelog was fetched')
+});
+
+export type FetchChangelogOutput = z.infer<typeof outputSchema>;
+
 // Tool for fetching changelog data
 export const fetchChangelogTool = createTool({
   id: 'fetch-changelog',
@@ -29,15 +45,7 @@ export const fetchChangelogTool = createTool({
     fromVersion: z.string().optional().describe('Starting version for range filtering'),
     toVersion: z.string().optional().describe('Ending version for range filtering')
   }),
-  outputSchema: z.object({
-    changelog: z.array(changelogSectionSchema).describe('Array of parsed changelog sections'),
-    totalSections: z.number().describe('Total number of sections found in the changelog'),
-    filteredSections: z.number().describe('Number of sections after version filtering'),
-    versionRange: z.string().describe('Description of the version range used for filtering'),
-    sourceFile: z.string().describe('The changelog file that was found and used'),
-    repository: z.string().describe('Repository in format owner/repo'),
-    branch: z.string().describe('Branch from which the changelog was fetched')
-  }),
+  outputSchema,
   execute: async ({ context }) => {
     const { owner, repo, changelogPath, branch, fromVersion, toVersion } = context;
     

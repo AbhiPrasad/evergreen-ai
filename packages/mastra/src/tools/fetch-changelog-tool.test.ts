@@ -4,7 +4,7 @@ import { join } from 'path';
 
 // Import the parseChangelogSections function from the tool
 // We need to extract it from the module since it's not exported
-const toolContent = readFileSync(join(process.cwd(), 'src/mastra/tools/fetch-changelog-tool.ts'), 'utf-8');
+const toolContent = readFileSync(join(__dirname, 'fetch-changelog-tool.ts'), 'utf-8');
 
 // Mock changelog content with PR/issue links for testing
 const mockChangelogContent = `# Changelog

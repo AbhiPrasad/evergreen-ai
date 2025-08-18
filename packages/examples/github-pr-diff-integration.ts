@@ -1,6 +1,4 @@
-import { githubPRParserTool } from '../src/mastra/tools/github-pr-parser-tool';
-import { gitDiffTool } from '../src/mastra/tools/git-diff-tool';
-import { gitDiffSummaryAgent } from '../src/mastra/agents/git-diff-summary-agent';
+import { githubPRParserTool, gitDiffTool, gitDiffSummaryAgent } from '@evergreen-ai/mastra';
 
 /**
  * Example: Analyzing a GitHub PR using the integrated tools

@@ -1,6 +1,30 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 
+// Define the schema for commit info
+const commitInfoSchema = z.object({
+  hash: z.string().describe('Full commit SHA'),
+  subject: z.string().describe('Commit message subject line'),
+  author: z.string().describe('Commit author name'),
+  date: z.string().describe('Commit date')
+});
+
+// Define the schema for file changes
+const fileChangeSchema = z.object({
+  path: z.string().describe('File path'),
+  status: z.enum(['added', 'modified', 'deleted', 'renamed']).describe('Change status'),
+  insertions: z.number().optional().describe('Number of lines added'),
+  deletions: z.number().optional().describe('Number of lines removed')
+});
+
+// Define the schema for diff statistics
+const diffStatsSchema = z.object({
+  filesChanged: z.number().describe('Total number of files changed'),
+  insertions: z.number().describe('Total lines added across all files'),
+  deletions: z.number().describe('Total lines removed across all files'),
+  files: z.array(fileChangeSchema).describe('Individual file changes')
+});
+
 // Tool for generating git diffs
 export const gitDiffTool = createTool({
   id: 'git-diff',
@@ -13,6 +37,20 @@ export const gitDiffTool = createTool({
     includeContext: z.number().default(3).describe('Number of context lines around changes'),
     diffType: z.enum(['unified', 'name-only', 'name-status', 'stat']).default('unified').describe('Type of diff output'),
     excludePatterns: z.array(z.string()).optional().describe('Patterns to exclude from diff (e.g., ["*.log", "node_modules/"])'),
+  }),
+  outputSchema: z.object({
+    diff: z.string().describe('Raw git diff output'),
+    stats: diffStatsSchema.describe('Parsed diff statistics'),
+    repository: z.string().describe('Repository path used for the diff'),
+    base: z.string().describe('Base reference (branch/commit) used'),
+    compare: z.string().describe('Compare reference (branch/commit) used'),
+    currentBranch: z.string().describe('Current git branch name'),
+    commitInfo: z.object({
+      base: commitInfoSchema.optional(),
+      compare: commitInfoSchema.optional()
+    }).describe('Commit information for base and compare if applicable'),
+    diffType: z.enum(['unified', 'name-only', 'name-status', 'stat']).describe('Type of diff that was generated'),
+    command: z.string().describe('The git command that was executed')
   }),
   execute: async ({ context }) => {
     const { 

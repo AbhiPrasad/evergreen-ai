@@ -46,7 +46,8 @@ describe('Git Diff Tool', () => {
           repository: testRepo,
           base: 'main',
           compare: 'feature-branch',
-          diffType: 'unified'
+          diffType: 'unified',
+          includeContext: 3
         }
       });
 
@@ -63,7 +64,8 @@ describe('Git Diff Tool', () => {
           repository: testRepo,
           base: 'main',
           compare: 'feature-branch',
-          diffType: 'name-only'
+          diffType: 'name-only',
+          includeContext: 3
         }
       });
 
@@ -79,7 +81,8 @@ describe('Git Diff Tool', () => {
           repository: testRepo,
           base: 'main',
           compare: 'feature-branch',
-          diffType: 'stat'
+          diffType: 'stat',
+          includeContext: 3
         }
       });
 
@@ -95,7 +98,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           filePath: 'file1.txt',
-          diffType: 'unified'
+          diffType: 'unified',
+          includeContext: 3
         }
       });
 
@@ -114,7 +118,8 @@ describe('Git Diff Tool', () => {
       const result = await gitDiffTool.execute({
         context: {
           repository: testRepo,
-          diffType: 'unified'
+          diffType: 'unified',
+          includeContext: 3
         }
       });
 
@@ -135,7 +140,8 @@ describe('Git Diff Tool', () => {
         context: {
           repository: testRepo,
           base: 'main',
-          diffType: 'unified'
+          diffType: 'unified',
+          includeContext: 3
         }
       });
 
@@ -154,7 +160,9 @@ describe('Git Diff Tool', () => {
         context: {
           repository: '/invalid/path',
           base: 'main',
-          compare: 'feature-branch'
+          compare: 'feature-branch',
+          diffType: 'unified',
+          includeContext: 3
         }
       })).rejects.toThrow('Failed to generate git diff');
     });
@@ -164,7 +172,9 @@ describe('Git Diff Tool', () => {
         context: {
           repository: testRepo,
           base: 'non-existent-branch',
-          compare: 'feature-branch'
+          compare: 'feature-branch',
+          diffType: 'unified',
+          includeContext: 3
         }
       })).rejects.toThrow('Failed to generate git diff');
     });
@@ -177,7 +187,8 @@ describe('Git Diff Tool', () => {
           repository: testRepo,
           base: 'main',
           compare: 'feature-branch',
-          diffType: 'unified'
+          diffType: 'unified',
+          includeContext: 3
         }
       });
 
@@ -202,7 +213,8 @@ describe('Git Diff Tool', () => {
           repository: testRepo,
           base: 'main',
           compare: 'feature-branch',
-          diffType: 'name-status'
+          diffType: 'name-status',
+          includeContext: 3
         }
       });
 

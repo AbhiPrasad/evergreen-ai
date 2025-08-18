@@ -1,0 +1,26 @@
+{
+  "name": "@evergreen-ai/examples",
+  "version": "1.0.0",
+  "description": "Examples demonstrating Mastra tools usage",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch",
+    "build": "echo 'Examples package - no build needed'",
+    "start": "tsx"
+  },
+  "keywords": ["examples", "mastra", "ai"],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "@evergreen-ai/mastra": "file:../mastra"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.2"
+  }
+}

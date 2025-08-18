@@ -1,5 +1,4 @@
-import { gitDiffTool } from '../src/mastra/tools/git-diff-tool';
-import { gitDiffSummaryAgent } from '../src/mastra/agents/git-diff-summary-agent';
+import { gitDiffTool, gitDiffSummaryAgent } from '@evergreen-ai/mastra';
 
 // Example 1: Using the git diff tool directly
 async function useGitDiffTool() {

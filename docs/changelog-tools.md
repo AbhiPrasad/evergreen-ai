@@ -228,7 +228,7 @@ async function generateReleaseNotes(owner: string, repo: string, fromVersion: st
 
 Run tests for the fetch changelog tool:
 ```bash
-npm test src/mastra/tools/fetch-changelog-tool.test.ts
+npm test packages/mastra/src/tools/fetch-changelog-tool.test.ts
 ```
 
 The tests cover:
