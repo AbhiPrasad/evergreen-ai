@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Logs
+*.log
+logs/
+
+# Coverage reports
+coverage/
+**/coverage/
+
+# Cache directories
+.cache/
+.turbo/
+.next/
+.nuxt/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.*
+
+# Generated files
+*.d.ts.map
+
+# Documentation
+CHANGELOG.md
+*.generated.*
+
+# Test snapshots
+**/__snapshots__/
+
+# Minified files
+*.min.js
+*.min.css
+
+# Temporary files
+*.tmp
+*.temp

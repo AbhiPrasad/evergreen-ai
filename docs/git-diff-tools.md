@@ -1,6 +1,7 @@
 # Git Diff Tools and Agent
 
-This document describes the Git Diff Tool, GitHub PR Parser Tool, and Git Diff Summary Agent added to the Mastra framework.
+This document describes the Git Diff Tool, GitHub PR Parser Tool, and Git Diff Summary Agent added to the Mastra
+framework.
 
 ## Type Safety with Output Schemas
 
@@ -14,6 +15,7 @@ All tools now include comprehensive output schemas using Zod, providing:
 - **Confident Coding**: Know exactly what data you're working with
 
 Example:
+
 ```typescript
 import { gitDiffTool, type GitDiffOutput } from '@mastra/tools/git-diff-tool';
 
@@ -23,7 +25,8 @@ const result: GitDiffOutput = await gitDiffTool.execute({ context: { base: 'main
 
 ## Git Diff Tool
 
-The `gitDiffTool` is a powerful tool for generating git diffs with various options and formats, now with full TypeScript support through output schemas.
+The `gitDiffTool` is a powerful tool for generating git diffs with various options and formats, now with full TypeScript
+support through output schemas.
 
 ### Features
 
@@ -45,8 +48,8 @@ const result = await gitDiffTool.execute({
     repository: '.',
     base: 'main',
     compare: 'feature-branch',
-    diffType: 'unified'
-  }
+    diffType: 'unified',
+  },
 });
 
 // Get only file names that changed
@@ -54,8 +57,8 @@ const files = await gitDiffTool.execute({
   context: {
     base: 'HEAD~5',
     compare: 'HEAD',
-    diffType: 'name-only'
-  }
+    diffType: 'name-only',
+  },
 });
 
 // Get diff statistics
@@ -63,8 +66,8 @@ const stats = await gitDiffTool.execute({
   context: {
     base: 'v1.0.0',
     compare: 'v2.0.0',
-    diffType: 'stat'
-  }
+    diffType: 'stat',
+  },
 });
 
 // Diff specific file with more context
@@ -72,8 +75,8 @@ const fileDiff = await gitDiffTool.execute({
   context: {
     base: 'main',
     filePath: 'src/api/endpoints.ts',
-    includeContext: 10
-  }
+    includeContext: 10,
+  },
 });
 ```
 
@@ -96,40 +99,42 @@ import { type GitDiffOutput, type DiffStats, type FileChange } from '@mastra/too
 
 // Main output type
 type GitDiffOutput = {
-  diff: string;                      // Raw git diff output
-  stats: DiffStats;                  // Parsed diff statistics
-  repository: string;                // Repository path used
-  base: string;                      // Base reference
-  compare: string;                   // Compare reference
-  currentBranch: string;             // Current git branch
-  commitInfo: {                      // Commit information
+  diff: string; // Raw git diff output
+  stats: DiffStats; // Parsed diff statistics
+  repository: string; // Repository path used
+  base: string; // Base reference
+  compare: string; // Compare reference
+  currentBranch: string; // Current git branch
+  commitInfo: {
+    // Commit information
     base?: CommitInfo;
     compare?: CommitInfo;
   };
   diffType: 'unified' | 'name-only' | 'name-status' | 'stat';
-  command: string;                   // Executed git command
-}
+  command: string; // Executed git command
+};
 
 // Diff statistics
 type DiffStats = {
-  filesChanged: number;              // Total files changed
-  insertions: number;                // Total lines added
-  deletions: number;                 // Total lines removed
-  files: FileChange[];               // Individual file changes
-}
+  filesChanged: number; // Total files changed
+  insertions: number; // Total lines added
+  deletions: number; // Total lines removed
+  files: FileChange[]; // Individual file changes
+};
 
 // File change details
 type FileChange = {
-  path: string;                      // File path
+  path: string; // File path
   status: 'added' | 'modified' | 'deleted' | 'renamed';
-  insertions?: number;               // Lines added in this file
-  deletions?: number;                // Lines removed in this file
-}
+  insertions?: number; // Lines added in this file
+  deletions?: number; // Lines removed in this file
+};
 ```
 
 ## GitHub PR Parser Tool
 
-The `githubPRParserTool` extracts git diff inputs from GitHub pull request URLs, making it easy to analyze PRs with full type safety.
+The `githubPRParserTool` extracts git diff inputs from GitHub pull request URLs, making it easy to analyze PRs with full
+type safety.
 
 ### Features
 
@@ -151,8 +156,8 @@ const prInfo = await githubPRParserTool.execute({
   context: {
     prUrl: 'https://github.com/facebook/react/pull/12345',
     includeCommits: false,
-    includeDiffUrls: false
-  }
+    includeDiffUrls: false,
+  },
 });
 
 // Get ready-to-use git diff configuration
@@ -164,8 +169,8 @@ const detailedInfo = await githubPRParserTool.execute({
   context: {
     prUrl: 'https://github.com/owner/repo/pull/123',
     includeCommits: true,
-    includeDiffUrls: true
-  }
+    includeDiffUrls: true,
+  },
 });
 ```
 
@@ -184,45 +189,46 @@ import { type GitHubPROutput, type GitDiffInputs, type PRStats } from '@mastra/t
 
 // Main output type
 type GitHubPROutput = {
-  prNumber: number;                  // Pull request number
-  title: string;                     // PR title
-  state: string;                     // PR state (open, closed, merged)
-  draft: boolean;                    // Whether PR is a draft
-  merged: boolean;                   // Whether PR has been merged
-  mergeable: boolean | null;         // Whether PR is mergeable
-  created_at: string;                // Creation timestamp
-  updated_at: string;                // Last update timestamp
-  repository: Repository;            // Base repository info
-  gitDiffInputs: GitDiffInputs;      // Extracted git diff inputs
-  author: Author;                    // PR author info
-  stats: PRStats;                    // PR statistics
-  labels: Label[];                   // PR labels
-  commits?: PRCommit[];              // Commits (if requested)
-  diffUrls?: DiffUrls;               // GitHub URLs (if requested)
-  gitCommands: GitCommands;          // Helpful git commands
+  prNumber: number; // Pull request number
+  title: string; // PR title
+  state: string; // PR state (open, closed, merged)
+  draft: boolean; // Whether PR is a draft
+  merged: boolean; // Whether PR has been merged
+  mergeable: boolean | null; // Whether PR is mergeable
+  created_at: string; // Creation timestamp
+  updated_at: string; // Last update timestamp
+  repository: Repository; // Base repository info
+  gitDiffInputs: GitDiffInputs; // Extracted git diff inputs
+  author: Author; // PR author info
+  stats: PRStats; // PR statistics
+  labels: Label[]; // PR labels
+  commits?: PRCommit[]; // Commits (if requested)
+  diffUrls?: DiffUrls; // GitHub URLs (if requested)
+  gitCommands: GitCommands; // Helpful git commands
   gitDiffToolConfig: GitDiffToolConfig; // Ready-to-use config
-}
+};
 
 // Git diff inputs for the PR
 type GitDiffInputs = {
-  base: string;                      // Base branch name
-  compare: string;                   // Compare branch name
-  baseSha: string;                   // Base commit SHA
-  headSha: string;                   // Head commit SHA
-  isCrossRepository: boolean;        // Is this a fork PR?
+  base: string; // Base branch name
+  compare: string; // Compare branch name
+  baseSha: string; // Base commit SHA
+  headSha: string; // Head commit SHA
+  isCrossRepository: boolean; // Is this a fork PR?
   headRepository: Repository | null; // Head repo for forks
-}
+};
 
 // PR statistics
 type PRStats = {
-  commits: number;                   // Number of commits
-  additions: number;                 // Lines added
-  deletions: number;                 // Lines removed
-  changedFiles: number;              // Files changed
-}
+  commits: number; // Number of commits
+  additions: number; // Lines added
+  deletions: number; // Lines removed
+  changedFiles: number; // Files changed
+};
 ```
 
-The output includes all the information needed to analyze a PR, with type safety ensuring you can access all properties confidently.
+The output includes all the information needed to analyze a PR, with type safety ensuring you can access all properties
+confidently.
 
 ### Integration with Git Diff Tool
 
@@ -231,15 +237,15 @@ The GitHub PR Parser seamlessly integrates with the Git Diff Tool:
 ```typescript
 // Step 1: Parse PR
 const prInfo = await githubPRParserTool.execute({
-  context: { prUrl: 'https://github.com/owner/repo/pull/123' }
+  context: { prUrl: 'https://github.com/owner/repo/pull/123' },
 });
 
 // Step 2: Use with git diff tool
 const diff = await gitDiffTool.execute({
   context: {
     repository: './local-repo-path',
-    ...prInfo.gitDiffToolConfig  // Spreads base and compare
-  }
+    ...prInfo.gitDiffToolConfig, // Spreads base and compare
+  },
 });
 ```
 
@@ -270,7 +276,7 @@ import { gitDiffSummaryAgent } from '@mastra/agents/git-diff-summary-agent';
 // Basic usage
 const summary = await gitDiffSummaryAgent.generateText({
   prompt: 'Analyze the git diff between main and feature-branch',
-  messages: []
+  messages: [],
 });
 
 // Focused analysis
@@ -279,7 +285,7 @@ const securityReview = await gitDiffSummaryAgent.generateText({
            1. Any security vulnerabilities introduced
            2. Breaking API changes
            3. Performance impacts`,
-  messages: []
+  messages: [],
 });
 
 // PR review preparation
@@ -287,7 +293,7 @@ const prReview = await gitDiffSummaryAgent.generateText({
   prompt: `Prepare a comprehensive pull request review for the changes 
            between main and feature/new-api. Include recommendations 
            for testing and potential improvements.`,
-  messages: []
+  messages: [],
 });
 ```
 
@@ -358,35 +364,35 @@ import { githubPRParserTool, gitDiffTool, gitDiffSummaryAgent } from '@mastra/to
 async function analyzePullRequest(prUrl: string, localRepoPath: string) {
   // 1. Parse GitHub PR
   const prInfo = await githubPRParserTool.execute({
-    context: { 
+    context: {
       prUrl,
-      includeCommits: true 
-    }
+      includeCommits: true,
+    },
   });
-  
+
   console.log(`Analyzing PR #${prInfo.prNumber}: ${prInfo.title}`);
-  
+
   // 2. Generate git diff
   const diff = await gitDiffTool.execute({
     context: {
       repository: localRepoPath,
       ...prInfo.gitDiffToolConfig,
-      diffType: 'unified'
-    }
+      diffType: 'unified',
+    },
   });
-  
+
   // 3. Get AI-powered summary
   const summary = await gitDiffSummaryAgent.generateText({
     prompt: `Analyze PR #${prInfo.prNumber}: "${prInfo.title}".
              Stats: ${prInfo.stats.changedFiles} files, +${prInfo.stats.additions}/-${prInfo.stats.deletions}
              Use the git diff tool with base: ${prInfo.gitDiffToolConfig.base} and compare: ${prInfo.gitDiffToolConfig.compare}`,
-    messages: []
+    messages: [],
   });
-  
+
   return {
     prInfo,
     diff: diff.stats,
-    summary: summary.text
+    summary: summary.text,
   };
 }
 ```
@@ -396,16 +402,19 @@ async function analyzePullRequest(prUrl: string, localRepoPath: string) {
 The tools include comprehensive tests:
 
 ### Git Diff Tool Tests
+
 ```bash
 npm test packages/mastra/src/tools/git-diff-tool.test.ts
 ```
 
 ### GitHub PR Parser Tool Tests
+
 ```bash
 npm test packages/mastra/src/tools/github-pr-parser-tool.test.ts
 ```
 
 Tests cover:
+
 - Basic functionality
 - Different output formats
 - Error handling

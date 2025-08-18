@@ -7,7 +7,7 @@ const repositorySchema = z.object({
   name: z.string().describe('Repository name'),
   fullName: z.string().describe('Full repository name (owner/repo)'),
   cloneUrl: z.string().url().describe('HTTPS clone URL'),
-  sshUrl: z.string().optional().describe('SSH clone URL')
+  sshUrl: z.string().optional().describe('SSH clone URL'),
 });
 
 const gitDiffInputsSchema = z.object({
@@ -16,25 +16,25 @@ const gitDiffInputsSchema = z.object({
   baseSha: z.string().describe('Base commit SHA'),
   headSha: z.string().describe('Head commit SHA'),
   isCrossRepository: z.boolean().describe('Whether this is a cross-repository PR (fork)'),
-  headRepository: repositorySchema.nullable().describe('Head repository info for cross-repo PRs')
+  headRepository: repositorySchema.nullable().describe('Head repository info for cross-repo PRs'),
 });
 
 const authorSchema = z.object({
   login: z.string().describe('GitHub username'),
-  type: z.string().describe('User type (User, Organization, etc.)')
+  type: z.string().describe('User type (User, Organization, etc.)'),
 });
 
 const prStatsSchema = z.object({
   commits: z.number().describe('Number of commits in the PR'),
   additions: z.number().describe('Total lines added'),
   deletions: z.number().describe('Total lines removed'),
-  changedFiles: z.number().describe('Number of files changed')
+  changedFiles: z.number().describe('Number of files changed'),
 });
 
 const labelSchema = z.object({
   name: z.string().describe('Label name'),
   color: z.string().describe('Label color (hex)'),
-  description: z.string().nullable().describe('Label description')
+  description: z.string().nullable().describe('Label description'),
 });
 
 const commitSchema = z.object({
@@ -43,9 +43,9 @@ const commitSchema = z.object({
   author: z.object({
     name: z.string().describe('Author name'),
     email: z.string().describe('Author email'),
-    date: z.string().describe('Commit date')
+    date: z.string().describe('Commit date'),
   }),
-  url: z.string().url().describe('URL to view the commit')
+  url: z.string().url().describe('URL to view the commit'),
 });
 
 const diffUrlsSchema = z.object({
@@ -53,7 +53,7 @@ const diffUrlsSchema = z.object({
   diff: z.string().url().describe('Raw diff URL'),
   patch: z.string().url().describe('Patch file URL'),
   commits: z.string().url().describe('Commits page URL'),
-  files: z.string().url().describe('Changed files page URL')
+  files: z.string().url().describe('Changed files page URL'),
 });
 
 const gitCommandsSchema = z.object({
@@ -62,16 +62,18 @@ const gitCommandsSchema = z.object({
   diffCommand: z.string().describe('Command to diff using git diff tool inputs'),
   addRemote: z.string().optional().describe('Command to add remote for cross-repo PRs'),
   fetchFromFork: z.string().optional().describe('Command to fetch from fork'),
-  diffCrossRepo: z.string().optional().describe('Command to diff cross-repo PR')
+  diffCrossRepo: z.string().optional().describe('Command to diff cross-repo PR'),
 });
 
 const gitDiffToolConfigSchema = z.object({
   base: z.string().describe('Base reference for git diff tool'),
   compare: z.string().describe('Compare reference for git diff tool'),
-  alternativeConfig: z.object({
-    base: z.string().describe('Alternative base using SHA'),
-    compare: z.string().describe('Alternative compare using SHA')
-  }).describe('Alternative config using SHAs for precision')
+  alternativeConfig: z
+    .object({
+      base: z.string().describe('Alternative base using SHA'),
+      compare: z.string().describe('Alternative compare using SHA'),
+    })
+    .describe('Alternative config using SHAs for precision'),
 });
 
 // Tool for parsing GitHub PR URLs and extracting git diff inputs
@@ -100,28 +102,28 @@ export const githubPRParserTool = createTool({
     commits: z.array(commitSchema).optional().describe('Individual commits (if includeCommits=true)'),
     diffUrls: diffUrlsSchema.optional().describe('GitHub diff URLs (if includeDiffUrls=true)'),
     gitCommands: gitCommandsSchema.describe('Helpful git commands for working with the PR'),
-    gitDiffToolConfig: gitDiffToolConfigSchema.describe('Ready-to-use config for git diff tool')
+    gitDiffToolConfig: gitDiffToolConfigSchema.describe('Ready-to-use config for git diff tool'),
   }),
   execute: async ({ context }) => {
     const { prUrl, includeCommits, includeDiffUrls } = context;
-    
+
     try {
       // Parse the PR URL
       const urlMatch = prUrl.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)/);
       if (!urlMatch) {
         throw new Error('Invalid GitHub PR URL format. Expected: https://github.com/owner/repo/pull/123');
       }
-      
+
       const [, owner, repo, prNumber] = urlMatch;
-      
+
       // Use GitHub CLI to fetch PR information
       const { execSync } = await import('child_process');
-      
+
       // Fetch PR details using gh api
       const prCommand = `gh api repos/${owner}/${repo}/pulls/${prNumber}`;
       const prOutput = execSync(prCommand, { encoding: 'utf-8' });
       const prData = JSON.parse(prOutput);
-      
+
       // Extract essential information
       const result: any = {
         // Basic PR info
@@ -133,7 +135,7 @@ export const githubPRParserTool = createTool({
         mergeable: prData.mergeable,
         created_at: prData.created_at,
         updated_at: prData.updated_at,
-        
+
         // Repository info
         repository: {
           owner,
@@ -142,7 +144,7 @@ export const githubPRParserTool = createTool({
           cloneUrl: prData.base.repo.clone_url,
           sshUrl: prData.base.repo.ssh_url,
         },
-        
+
         // Branch information for git diff
         gitDiffInputs: {
           base: prData.base.ref,
@@ -151,20 +153,22 @@ export const githubPRParserTool = createTool({
           headSha: prData.head.sha,
           // Handle cross-repository PRs (forks)
           isCrossRepository: prData.head.repo?.full_name !== prData.base.repo.full_name,
-          headRepository: prData.head.repo ? {
-            owner: prData.head.repo.owner.login,
-            name: prData.head.repo.name,
-            fullName: prData.head.repo.full_name,
-            cloneUrl: prData.head.repo.clone_url,
-          } : null,
+          headRepository: prData.head.repo
+            ? {
+                owner: prData.head.repo.owner.login,
+                name: prData.head.repo.name,
+                fullName: prData.head.repo.full_name,
+                cloneUrl: prData.head.repo.clone_url,
+              }
+            : null,
         },
-        
+
         // PR metadata
         author: {
           login: prData.user.login,
           type: prData.user.type,
         },
-        
+
         // Stats
         stats: {
           commits: prData.commits,
@@ -172,7 +176,7 @@ export const githubPRParserTool = createTool({
           deletions: prData.deletions,
           changedFiles: prData.changed_files,
         },
-        
+
         // Labels
         labels: prData.labels.map((label: any) => ({
           name: label.name,
@@ -180,14 +184,14 @@ export const githubPRParserTool = createTool({
           description: label.description,
         })),
       };
-      
+
       // Include commits if requested
       if (includeCommits) {
         try {
           const commitsCommand = `gh api repos/${owner}/${repo}/pulls/${prNumber}/commits`;
           const commitsOutput = execSync(commitsCommand, { encoding: 'utf-8' });
           const commitsData = JSON.parse(commitsOutput);
-          
+
           result.commits = commitsData.map((commit: any) => ({
             sha: commit.sha,
             message: commit.commit.message,
@@ -203,7 +207,7 @@ export const githubPRParserTool = createTool({
           console.warn('Failed to fetch commits:', err);
         }
       }
-      
+
       // Include diff URLs if requested
       if (includeDiffUrls) {
         result.diffUrls = {
@@ -214,7 +218,7 @@ export const githubPRParserTool = createTool({
           files: `${prData.html_url}/files`,
         };
       }
-      
+
       // Add convenience properties for git operations
       result.gitCommands = {
         // Command to fetch PR branch locally
@@ -230,11 +234,11 @@ export const githubPRParserTool = createTool({
           diffCrossRepo: `git diff ${prData.base.ref}...${prData.head.repo.owner.login}/${prData.head.ref}`,
         }),
       };
-      
+
       // Add a ready-to-use configuration for the git diff tool
       result.gitDiffToolConfig = {
         base: prData.base.ref,
-        compare: result.gitDiffInputs.isCrossRepository 
+        compare: result.gitDiffInputs.isCrossRepository
           ? `${prData.head.repo.owner.login}/${prData.head.ref}`
           : prData.head.ref,
         // Use SHAs for more precise comparison
@@ -243,7 +247,7 @@ export const githubPRParserTool = createTool({
           compare: prData.head.sha,
         },
       };
-      
+
       return result;
     } catch (error) {
       if (error instanceof Error && error.message.includes('404')) {
@@ -251,7 +255,7 @@ export const githubPRParserTool = createTool({
       }
       throw new Error(`Failed to parse GitHub PR: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }
+  },
 });
 
 // Helper function to validate GitHub PR URL
@@ -263,7 +267,7 @@ export function isValidGitHubPRUrl(url: string): boolean {
 export function parseGitHubPRUrl(url: string): { owner: string; repo: string; prNumber: number } | null {
   const match = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+)/);
   if (!match) return null;
-  
+
   return {
     owner: match[1],
     repo: match[2],

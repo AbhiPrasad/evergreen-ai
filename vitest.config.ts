@@ -11,18 +11,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'packages/**/test/',
-        '**/*.d.ts',
-        '**/*.config.{js,ts}',
-        '**/index.ts'
-      ]
-    }
+      exclude: ['node_modules/', 'packages/**/test/', '**/*.d.ts', '**/*.config.{js,ts}', '**/index.ts'],
+    },
   },
   resolve: {
     alias: {
-      '@evergreen-ai/mastra': './packages/mastra/src/index.ts'
-    }
-  }
+      '@evergreen-ai/mastra': './packages/mastra/src/index.ts',
+    },
+  },
 });

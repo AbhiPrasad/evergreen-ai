@@ -4,7 +4,8 @@ This document describes the Fetch Changelog Tool and Changelog Summary Agent in 
 
 ## Fetch Changelog Tool
 
-The `fetchChangelogTool` fetches and parses changelog files from GitHub repositories with version filtering and PR/issue link extraction.
+The `fetchChangelogTool` fetches and parses changelog files from GitHub repositories with version filtering and PR/issue
+link extraction.
 
 ### Features
 
@@ -24,30 +25,30 @@ import { type FetchChangelogOutput, type ChangelogSection, type PRLink } from '@
 
 // Main output type
 type FetchChangelogOutput = {
-  changelog: ChangelogSection[];     // Array of parsed changelog sections
-  totalSections: number;             // Total sections found
-  filteredSections: number;          // Sections after filtering
-  versionRange: string;              // Description of version range
-  sourceFile: string;                // Which changelog file was used
-  repository: string;                // "owner/repo" format
-  branch: string;                    // Branch name
-}
+  changelog: ChangelogSection[]; // Array of parsed changelog sections
+  totalSections: number; // Total sections found
+  filteredSections: number; // Sections after filtering
+  versionRange: string; // Description of version range
+  sourceFile: string; // Which changelog file was used
+  repository: string; // "owner/repo" format
+  branch: string; // Branch name
+};
 
 // Individual changelog section
 type ChangelogSection = {
-  version?: string;                  // Version number (optional)
-  date?: string;                     // Release date (optional)
-  content: string;                   // Section content without header
-  rawContent: string;                // Full content with header
-  prLinks: PRLink[];                 // Extracted PR/issue links
-}
+  version?: string; // Version number (optional)
+  date?: string; // Release date (optional)
+  content: string; // Section content without header
+  rawContent: string; // Full content with header
+  prLinks: PRLink[]; // Extracted PR/issue links
+};
 
 // PR/Issue link
 type PRLink = {
-  number: string;                    // PR or issue number
-  url: string;                       // Full GitHub URL
-  type: 'pr' | 'issue';             // Link type
-}
+  number: string; // PR or issue number
+  url: string; // Full GitHub URL
+  type: 'pr' | 'issue'; // Link type
+};
 ```
 
 ### Usage
@@ -60,8 +61,8 @@ const result = await fetchChangelogTool.execute({
   context: {
     owner: 'facebook',
     repo: 'react',
-    branch: 'main'
-  }
+    branch: 'main',
+  },
 });
 
 // With version filtering
@@ -70,8 +71,8 @@ const filtered = await fetchChangelogTool.execute({
     owner: 'vercel',
     repo: 'next.js',
     fromVersion: '13.0.0',
-    toVersion: '14.0.0'
-  }
+    toVersion: '14.0.0',
+  },
 });
 
 // Specify custom changelog path
@@ -80,8 +81,8 @@ const customPath = await fetchChangelogTool.execute({
     owner: 'microsoft',
     repo: 'typescript',
     changelogPath: 'docs/CHANGELOG.md',
-    branch: 'main'
-  }
+    branch: 'main',
+  },
 });
 ```
 
@@ -101,24 +102,27 @@ import { fetchChangelogTool, type FetchChangelogOutput } from '@mastra/tools/fet
 
 async function analyzeRecentChanges(owner: string, repo: string) {
   const result: FetchChangelogOutput = await fetchChangelogTool.execute({
-    context: { owner, repo }
+    context: { owner, repo },
   });
-  
+
   // TypeScript knows all these properties exist
   console.log(`Found ${result.totalSections} versions in ${result.sourceFile}`);
-  
+
   // Analyze PR/issue links with type safety
-  const stats = result.changelog.reduce((acc, section) => {
-    const prs = section.prLinks.filter(link => link.type === 'pr').length;
-    const issues = section.prLinks.filter(link => link.type === 'issue').length;
-    
-    return {
-      totalPRs: acc.totalPRs + prs,
-      totalIssues: acc.totalIssues + issues,
-      versions: acc.versions + 1
-    };
-  }, { totalPRs: 0, totalIssues: 0, versions: 0 });
-  
+  const stats = result.changelog.reduce(
+    (acc, section) => {
+      const prs = section.prLinks.filter(link => link.type === 'pr').length;
+      const issues = section.prLinks.filter(link => link.type === 'issue').length;
+
+      return {
+        totalPRs: acc.totalPRs + prs,
+        totalIssues: acc.totalIssues + issues,
+        versions: acc.versions + 1,
+      };
+    },
+    { totalPRs: 0, totalIssues: 0, versions: 0 },
+  );
+
   return stats;
 }
 ```
@@ -126,6 +130,7 @@ async function analyzeRecentChanges(owner: string, repo: string) {
 ### Error Handling
 
 The tool provides clear error messages:
+
 - "Changelog file not found at path: ..." - when specified file doesn't exist
 - "No changelog file found (tried: ...)" - when auto-detection fails
 - "Failed to fetch changelog: ..." - for API or network errors
@@ -137,7 +142,8 @@ The tool provides clear error messages:
 
 ## Changelog Summary Agent
 
-The `changelogSummaryAgent` analyzes changelog data and provides intelligent summaries based on keywords and version ranges.
+The `changelogSummaryAgent` analyzes changelog data and provides intelligent summaries based on keywords and version
+ranges.
 
 ### Features
 
@@ -155,21 +161,21 @@ import { changelogSummaryAgent } from '@mastra/agents/changelog-summary-agent';
 // Basic changelog summary
 const summary = await changelogSummaryAgent.generateText({
   prompt: 'Summarize the changelog for facebook/react focusing on hooks-related changes',
-  messages: []
+  messages: [],
 });
 
 // Version-specific analysis
 const versionSummary = await changelogSummaryAgent.generateText({
   prompt: `Analyze the changelog for vercel/next.js between versions 13.0.0 and 14.0.0.
            Focus on breaking changes and new features.`,
-  messages: []
+  messages: [],
 });
 
 // Security-focused review
 const securityReview = await changelogSummaryAgent.generateText({
   prompt: `Review the changelog for nodejs/node and highlight all security-related updates
            in the last 10 versions`,
-  messages: []
+  messages: [],
 });
 ```
 
@@ -204,22 +210,22 @@ async function generateReleaseNotes(owner: string, repo: string, fromVersion: st
       owner,
       repo,
       fromVersion,
-      toVersion: 'latest'
-    }
+      toVersion: 'latest',
+    },
   });
-  
+
   // Generate AI summary
   const summary = await changelogSummaryAgent.generateText({
     prompt: `Create release notes from the changelog of ${owner}/${repo} starting from ${fromVersion}.
              Found ${changelog.filteredSections} versions with changes.
              Focus on user-facing changes and breaking changes.`,
-    messages: []
+    messages: [],
   });
-  
+
   return {
     versions: changelog.filteredSections,
     sourceFile: changelog.sourceFile,
-    summary: summary.text
+    summary: summary.text,
   };
 }
 ```
@@ -227,11 +233,13 @@ async function generateReleaseNotes(owner: string, repo: string, fromVersion: st
 ## Testing
 
 Run tests for the fetch changelog tool:
+
 ```bash
 npm test packages/mastra/src/tools/fetch-changelog-tool.test.ts
 ```
 
 The tests cover:
+
 - PR/issue link extraction
 - Duplicate link handling
 - Various markdown formats

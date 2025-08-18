@@ -1,4 +1,3 @@
-
 import { Mastra } from '@mastra/core/mastra';
 import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
@@ -11,11 +10,11 @@ import { githubPRParserTool } from './tools/github-pr-parser-tool';
 export const mastra = new Mastra({
   agents: {
     changelogSummaryAgent,
-    gitDiffSummaryAgent
+    gitDiffSummaryAgent,
   },
   storage: new LibSQLStore({
     // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
-    url: ":memory:",
+    url: ':memory:',
   }),
   logger: new PinoLogger({
     name: 'Mastra',

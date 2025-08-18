@@ -4,7 +4,8 @@ import { fetchChangelogTool } from '../tools/fetch-changelog-tool';
 
 export const changelogSummaryAgent = new Agent({
   name: 'Changelog Summary Agent',
-  description: 'An agent that summarizes repository changelogs and highlights important changes based on keywords and version ranges',
+  description:
+    'An agent that summarizes repository changelogs and highlights important changes based on keywords and version ranges',
   instructions: `You are a changelog analysis expert. Your role is to:
 
 1. Analyze changelog/release data from repositories
@@ -34,9 +35,9 @@ When summarizing:
 - Use clear, concise language suitable for developers and stakeholders
 
 Format your response in markdown with clear sections and bullet points. Ensure all PR/issue links from the original changelog are maintained in your summary.`,
-  
+
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: {
-    fetchChangelog: fetchChangelogTool
-  }
+    fetchChangelog: fetchChangelogTool,
+  },
 });

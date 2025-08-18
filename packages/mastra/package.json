@@ -1,5 +1,5 @@
 {
-  "name": "@evergreen-ai/mastra",
+  "name": "@sentry/evergreen-ai-agents",
   "version": "1.0.0",
   "description": "Mastra tools and agents for AI workflows",
   "main": "dist/index.js",

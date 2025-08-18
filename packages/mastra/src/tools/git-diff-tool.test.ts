@@ -11,25 +11,25 @@ describe('Git Diff Tool', () => {
   beforeAll(() => {
     // Create a temporary git repository for testing
     testRepo = mkdtempSync(join(tmpdir(), 'git-diff-test-'));
-    
+
     // Initialize git repo
     execSync('git init', { cwd: testRepo });
     execSync('git config user.email "test@example.com"', { cwd: testRepo });
     execSync('git config user.name "Test User"', { cwd: testRepo });
-    
+
     // Create initial commit
     writeFileSync(join(testRepo, 'file1.txt'), 'Initial content\n');
     writeFileSync(join(testRepo, 'file2.js'), 'console.log("hello");\n');
     execSync('git add .', { cwd: testRepo });
     execSync('git commit -m "Initial commit"', { cwd: testRepo });
-    
+
     // Create a feature branch with changes
     execSync('git checkout -b feature-branch', { cwd: testRepo });
     writeFileSync(join(testRepo, 'file1.txt'), 'Initial content\nModified content\n');
     writeFileSync(join(testRepo, 'file3.md'), '# New Documentation\n');
     execSync('git add .', { cwd: testRepo });
     execSync('git commit -m "Add feature changes"', { cwd: testRepo });
-    
+
     // Go back to main branch
     execSync('git checkout main', { cwd: testRepo });
   });
@@ -47,8 +47,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           diffType: 'unified',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.diff).toContain('file1.txt');
@@ -65,8 +65,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           diffType: 'name-only',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.diff).toContain('file1.txt');
@@ -82,8 +82,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           diffType: 'stat',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.diff).toContain('2 files changed');
@@ -99,8 +99,8 @@ describe('Git Diff Tool', () => {
           compare: 'feature-branch',
           filePath: 'file1.txt',
           diffType: 'unified',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.diff).toContain('file1.txt');
@@ -114,19 +114,19 @@ describe('Git Diff Tool', () => {
       // Make a change in working directory
       execSync('git checkout feature-branch', { cwd: testRepo });
       writeFileSync(join(testRepo, 'file1.txt'), 'Initial content\nModified content\nUnstaged change\n');
-      
+
       const result = await gitDiffTool.execute({
         context: {
           repository: testRepo,
           diffType: 'unified',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.diff).toContain('Unstaged change');
       expect(result.base).toBe('working directory');
       expect(result.compare).toBe('HEAD');
-      
+
       // Clean up
       execSync('git checkout file1.txt', { cwd: testRepo });
       execSync('git checkout main', { cwd: testRepo });
@@ -135,19 +135,19 @@ describe('Git Diff Tool', () => {
     it('should diff from specific commit to working directory', async () => {
       execSync('git checkout feature-branch', { cwd: testRepo });
       writeFileSync(join(testRepo, 'file1.txt'), 'Initial content\nModified content\nWorking dir change\n');
-      
+
       const result = await gitDiffTool.execute({
         context: {
           repository: testRepo,
           base: 'main',
           diffType: 'unified',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.diff).toContain('Working dir change');
       expect(result.stats.filesChanged).toBeGreaterThan(0);
-      
+
       // Clean up
       execSync('git checkout file1.txt', { cwd: testRepo });
       execSync('git checkout main', { cwd: testRepo });
@@ -156,27 +156,31 @@ describe('Git Diff Tool', () => {
 
   describe('Error handling', () => {
     it('should handle invalid repository path', async () => {
-      await expect(gitDiffTool.execute({
-        context: {
-          repository: '/invalid/path',
-          base: 'main',
-          compare: 'feature-branch',
-          diffType: 'unified',
-          includeContext: 3
-        }
-      })).rejects.toThrow('Failed to generate git diff');
+      await expect(
+        gitDiffTool.execute({
+          context: {
+            repository: '/invalid/path',
+            base: 'main',
+            compare: 'feature-branch',
+            diffType: 'unified',
+            includeContext: 3,
+          },
+        }),
+      ).rejects.toThrow('Failed to generate git diff');
     });
 
     it('should handle invalid branch names', async () => {
-      await expect(gitDiffTool.execute({
-        context: {
-          repository: testRepo,
-          base: 'non-existent-branch',
-          compare: 'feature-branch',
-          diffType: 'unified',
-          includeContext: 3
-        }
-      })).rejects.toThrow('Failed to generate git diff');
+      await expect(
+        gitDiffTool.execute({
+          context: {
+            repository: testRepo,
+            base: 'non-existent-branch',
+            compare: 'feature-branch',
+            diffType: 'unified',
+            includeContext: 3,
+          },
+        }),
+      ).rejects.toThrow('Failed to generate git diff');
     });
   });
 
@@ -188,8 +192,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           diffType: 'unified',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.stats).toBeDefined();
@@ -207,20 +211,20 @@ describe('Git Diff Tool', () => {
       execSync('rm deleted.txt', { cwd: testRepo });
       execSync('git add deleted.txt', { cwd: testRepo });
       execSync('git commit -m "Delete file"', { cwd: testRepo });
-      
+
       const result = await gitDiffTool.execute({
         context: {
           repository: testRepo,
           base: 'main',
           compare: 'feature-branch',
           diffType: 'name-status',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       expect(result.stats.files.some(f => f.status === 'added')).toBe(true);
       expect(result.stats.files.some(f => f.status === 'modified')).toBe(true);
-      
+
       // Clean up
       execSync('git checkout main', { cwd: testRepo });
     });
@@ -234,8 +238,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           diffType: 'unified',
-          includeContext: 3
-        }
+          includeContext: 3,
+        },
       });
 
       const resultExpanded = await gitDiffTool.execute({
@@ -244,8 +248,8 @@ describe('Git Diff Tool', () => {
           base: 'main',
           compare: 'feature-branch',
           diffType: 'unified',
-          includeContext: 10
-        }
+          includeContext: 10,
+        },
       });
 
       // The expanded context diff should generally be longer

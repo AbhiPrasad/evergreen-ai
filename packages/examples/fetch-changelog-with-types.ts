@@ -14,8 +14,8 @@ async function analyzeChangelog() {
         repo: 'react',
         branch: 'main',
         fromVersion: '18.0.0',
-        toVersion: '18.3.0'
-      }
+        toVersion: '18.3.0',
+      },
     });
 
     // TypeScript knows the exact shape of the result
@@ -27,15 +27,18 @@ async function analyzeChangelog() {
     // Analyze each section with type safety
     result.changelog.forEach((section: ChangelogSection) => {
       console.log(`\n🔖 Version ${section.version || 'Unknown'}${section.date ? ` (${section.date})` : ''}`);
-      
+
       // Count PR and issue links
       const prCount = section.prLinks.filter(link => link.type === 'pr').length;
       const issueCount = section.prLinks.filter(link => link.type === 'issue').length;
-      
+
       console.log(`   📌 Links: ${prCount} PRs, ${issueCount} issues`);
-      
+
       // Show first few lines of content
-      const firstLines = section.content.split('\n').slice(0, 3).filter(line => line.trim());
+      const firstLines = section.content
+        .split('\n')
+        .slice(0, 3)
+        .filter(line => line.trim());
       firstLines.forEach(line => console.log(`   ${line.substring(0, 80)}${line.length > 80 ? '...' : ''}`));
     });
 
@@ -44,14 +47,14 @@ async function analyzeChangelog() {
       .flatMap(section => section.prLinks)
       .filter(link => link.type === 'pr')
       .map(link => link.number);
-    
+
     console.log(`\n📊 Total PRs referenced: ${allPRNumbers.length}`);
 
     // Example: Find sections with the most changes
     const sectionsWithMostLinks = result.changelog
       .map(section => ({
         version: section.version || 'Unknown',
-        linkCount: section.prLinks.length
+        linkCount: section.prLinks.length,
       }))
       .sort((a, b) => b.linkCount - a.linkCount)
       .slice(0, 3);
@@ -60,7 +63,6 @@ async function analyzeChangelog() {
     sectionsWithMostLinks.forEach((item, index) => {
       console.log(`   ${index + 1}. v${item.version}: ${item.linkCount} links`);
     });
-
   } catch (error) {
     console.error('❌ Error:', error);
   }
@@ -72,15 +74,15 @@ async function analyzeChangelog() {
 async function safeChangelogFetch(owner: string, repo: string): Promise<FetchChangelogOutput | null> {
   try {
     const result = await fetchChangelogTool.execute({
-      context: { owner, repo }
+      context: { owner, repo },
     });
-    
+
     // The output schema ensures we can safely access these properties
     if (result.totalSections === 0) {
       console.warn(`⚠️ No changelog sections found in ${result.repository}`);
       return null;
     }
-    
+
     return result;
   } catch (error) {
     console.error(`Failed to fetch changelog for ${owner}/${repo}:`, error);
@@ -97,11 +99,11 @@ function processChangelogSection(section: ChangelogSection): {
   bugfixCount: number;
 } {
   const content = section.content.toLowerCase();
-  
+
   return {
     hasBreakingChanges: content.includes('breaking') || content.includes('deprecated'),
     featureCount: (content.match(/feat(?:ure)?[:\s]/g) || []).length,
-    bugfixCount: (content.match(/fix(?:es)?[:\s]/g) || []).length
+    bugfixCount: (content.match(/fix(?:es)?[:\s]/g) || []).length,
   };
 }
 

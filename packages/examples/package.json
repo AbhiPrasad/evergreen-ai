@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "tsx watch",
     "build": "echo 'Examples package - no build needed'",
-    "start": "tsx"
+    "start": "tsx",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json}\""
   },
-  "keywords": ["examples", "mastra", "ai"],
+  "keywords": [
+    "examples",
+    "mastra",
+    "ai"
+  ],
   "author": "",
   "license": "MIT",
   "type": "module",

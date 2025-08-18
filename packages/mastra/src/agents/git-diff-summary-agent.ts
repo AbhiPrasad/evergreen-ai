@@ -66,9 +66,9 @@ When summarizing git diffs:
 - Professional and constructive
 - Educational when explaining complex changes
 - Balanced - acknowledge both strengths and areas for improvement`,
-  
+
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: {
-    gitDiff: gitDiffTool
-  }
+    gitDiff: gitDiffTool,
+  },
 });

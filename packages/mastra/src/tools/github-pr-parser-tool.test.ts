@@ -3,16 +3,16 @@ import { githubPRParserTool, isValidGitHubPRUrl, parseGitHubPRUrl } from './gith
 
 // Mock child_process
 vi.mock('child_process', () => ({
-  execSync: vi.fn()
+  execSync: vi.fn(),
 }));
 
 describe('GitHub PR Parser Tool', () => {
   const mockExecSync = vi.fn();
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.doMock('child_process', () => ({
-      execSync: mockExecSync
+      execSync: mockExecSync,
     }));
   });
 
@@ -37,7 +37,7 @@ describe('GitHub PR Parser Tool', () => {
       expect(result).toEqual({
         owner: 'facebook',
         repo: 'react',
-        prNumber: 12345
+        prNumber: 12345,
       });
     });
 
@@ -65,8 +65,8 @@ describe('GitHub PR Parser Tool', () => {
           clone_url: 'https://github.com/owner/repo.git',
           ssh_url: 'git@github.com:owner/repo.git',
           owner: { login: 'owner' },
-          name: 'repo'
-        }
+          name: 'repo',
+        },
       },
       head: {
         ref: 'feature-branch',
@@ -75,23 +75,21 @@ describe('GitHub PR Parser Tool', () => {
           full_name: 'owner/repo',
           clone_url: 'https://github.com/owner/repo.git',
           owner: { login: 'owner' },
-          name: 'repo'
-        }
+          name: 'repo',
+        },
       },
       user: {
         login: 'contributor',
-        type: 'User'
+        type: 'User',
       },
       commits: 3,
       additions: 100,
       deletions: 50,
       changed_files: 5,
-      labels: [
-        { name: 'enhancement', color: '84b6eb', description: 'New feature' }
-      ],
+      labels: [{ name: 'enhancement', color: '84b6eb', description: 'New feature' }],
       html_url: 'https://github.com/owner/repo/pull/123',
       diff_url: 'https://github.com/owner/repo/pull/123.diff',
-      patch_url: 'https://github.com/owner/repo/pull/123.patch'
+      patch_url: 'https://github.com/owner/repo/pull/123.patch',
     };
 
     it('should extract basic PR information', async () => {
@@ -101,14 +99,11 @@ describe('GitHub PR Parser Tool', () => {
         context: {
           prUrl: 'https://github.com/owner/repo/pull/123',
           includeCommits: false,
-          includeDiffUrls: false
-        }
+          includeDiffUrls: false,
+        },
       });
 
-      expect(mockExecSync).toHaveBeenCalledWith(
-        'gh api repos/owner/repo/pulls/123',
-        { encoding: 'utf-8' }
-      );
+      expect(mockExecSync).toHaveBeenCalledWith('gh api repos/owner/repo/pulls/123', { encoding: 'utf-8' });
 
       expect(result.prNumber).toBe(123);
       expect(result.title).toBe('Add new feature');
@@ -124,8 +119,8 @@ describe('GitHub PR Parser Tool', () => {
         context: {
           prUrl: 'https://github.com/owner/repo/pull/123',
           includeCommits: false,
-          includeDiffUrls: false
-        }
+          includeDiffUrls: false,
+        },
       });
 
       expect(result.gitDiffInputs).toEqual({
@@ -138,8 +133,8 @@ describe('GitHub PR Parser Tool', () => {
           owner: 'owner',
           name: 'repo',
           fullName: 'owner/repo',
-          cloneUrl: 'https://github.com/owner/repo.git'
-        }
+          cloneUrl: 'https://github.com/owner/repo.git',
+        },
       });
 
       expect(result.gitDiffToolConfig).toEqual({
@@ -147,8 +142,8 @@ describe('GitHub PR Parser Tool', () => {
         compare: 'feature-branch',
         alternativeConfig: {
           base: 'abc123',
-          compare: 'def456'
-        }
+          compare: 'def456',
+        },
       });
     });
 
@@ -161,9 +156,9 @@ describe('GitHub PR Parser Tool', () => {
             full_name: 'contributor/repo',
             clone_url: 'https://github.com/contributor/repo.git',
             owner: { login: 'contributor' },
-            name: 'repo'
-          }
-        }
+            name: 'repo',
+          },
+        },
       };
 
       mockExecSync.mockReturnValue(JSON.stringify(crossRepoPRData));
@@ -172,8 +167,8 @@ describe('GitHub PR Parser Tool', () => {
         context: {
           prUrl: 'https://github.com/owner/repo/pull/123',
           includeCommits: false,
-          includeDiffUrls: false
-        }
+          includeDiffUrls: false,
+        },
       });
 
       expect(result.gitDiffInputs.isCrossRepository).toBe(true);
@@ -181,7 +176,7 @@ describe('GitHub PR Parser Tool', () => {
         owner: 'contributor',
         name: 'repo',
         fullName: 'contributor/repo',
-        cloneUrl: 'https://github.com/contributor/repo.git'
+        cloneUrl: 'https://github.com/contributor/repo.git',
       });
 
       expect(result.gitCommands.addRemote).toBe('git remote add contributor https://github.com/contributor/repo.git');
@@ -198,30 +193,25 @@ describe('GitHub PR Parser Tool', () => {
             author: {
               name: 'John Doe',
               email: 'john@example.com',
-              date: '2024-01-01T00:00:00Z'
-            }
+              date: '2024-01-01T00:00:00Z',
+            },
           },
-          html_url: 'https://github.com/owner/repo/commit/commit1'
-        }
+          html_url: 'https://github.com/owner/repo/commit/commit1',
+        },
       ];
 
-      mockExecSync
-        .mockReturnValueOnce(JSON.stringify(mockPRData))
-        .mockReturnValueOnce(JSON.stringify(mockCommits));
+      mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRData)).mockReturnValueOnce(JSON.stringify(mockCommits));
 
       const result = await githubPRParserTool.execute({
         context: {
           prUrl: 'https://github.com/owner/repo/pull/123',
           includeCommits: true,
-          includeDiffUrls: false
-        }
+          includeDiffUrls: false,
+        },
       });
 
       expect(mockExecSync).toHaveBeenCalledTimes(2);
-      expect(mockExecSync).toHaveBeenLastCalledWith(
-        'gh api repos/owner/repo/pulls/123/commits',
-        { encoding: 'utf-8' }
-      );
+      expect(mockExecSync).toHaveBeenLastCalledWith('gh api repos/owner/repo/pulls/123/commits', { encoding: 'utf-8' });
 
       expect(result.commits).toHaveLength(1);
       expect(result.commits[0]).toEqual({
@@ -230,9 +220,9 @@ describe('GitHub PR Parser Tool', () => {
         author: {
           name: 'John Doe',
           email: 'john@example.com',
-          date: '2024-01-01T00:00:00Z'
+          date: '2024-01-01T00:00:00Z',
         },
-        url: 'https://github.com/owner/repo/commit/commit1'
+        url: 'https://github.com/owner/repo/commit/commit1',
       });
     });
 
@@ -243,8 +233,8 @@ describe('GitHub PR Parser Tool', () => {
         context: {
           prUrl: 'https://github.com/owner/repo/pull/123',
           includeCommits: false,
-          includeDiffUrls: true
-        }
+          includeDiffUrls: true,
+        },
       });
 
       expect(result.diffUrls).toEqual({
@@ -252,7 +242,7 @@ describe('GitHub PR Parser Tool', () => {
         diff: 'https://github.com/owner/repo/pull/123.diff',
         patch: 'https://github.com/owner/repo/pull/123.patch',
         commits: 'https://github.com/owner/repo/pull/123/commits',
-        files: 'https://github.com/owner/repo/pull/123/files'
+        files: 'https://github.com/owner/repo/pull/123/files',
       });
     });
 
@@ -263,8 +253,8 @@ describe('GitHub PR Parser Tool', () => {
         context: {
           prUrl: 'https://github.com/owner/repo/pull/123',
           includeCommits: false,
-          includeDiffUrls: false
-        }
+          includeDiffUrls: false,
+        },
       });
 
       expect(result.gitCommands.fetchPR).toBe('git fetch origin pull/123/head:pr-123');
@@ -275,13 +265,15 @@ describe('GitHub PR Parser Tool', () => {
 
   describe('Error handling', () => {
     it('should throw error for invalid PR URL format', async () => {
-      await expect(githubPRParserTool.execute({
-        context: {
-          prUrl: 'https://github.com/owner/repo/issues/123',
-          includeCommits: false,
-          includeDiffUrls: false
-        }
-      })).rejects.toThrow('Invalid GitHub PR URL format');
+      await expect(
+        githubPRParserTool.execute({
+          context: {
+            prUrl: 'https://github.com/owner/repo/issues/123',
+            includeCommits: false,
+            includeDiffUrls: false,
+          },
+        }),
+      ).rejects.toThrow('Invalid GitHub PR URL format');
     });
 
     it('should handle 404 errors gracefully', async () => {
@@ -290,13 +282,15 @@ describe('GitHub PR Parser Tool', () => {
         throw error;
       });
 
-      await expect(githubPRParserTool.execute({
-        context: {
-          prUrl: 'https://github.com/owner/repo/pull/999999',
-          includeCommits: false,
-          includeDiffUrls: false
-        }
-      })).rejects.toThrow('Pull request not found');
+      await expect(
+        githubPRParserTool.execute({
+          context: {
+            prUrl: 'https://github.com/owner/repo/pull/999999',
+            includeCommits: false,
+            includeDiffUrls: false,
+          },
+        }),
+      ).rejects.toThrow('Pull request not found');
     });
 
     it('should handle other API errors', async () => {
@@ -304,13 +298,15 @@ describe('GitHub PR Parser Tool', () => {
         throw new Error('API rate limit exceeded');
       });
 
-      await expect(githubPRParserTool.execute({
-        context: {
-          prUrl: 'https://github.com/owner/repo/pull/123',
-          includeCommits: false,
-          includeDiffUrls: false
-        }
-      })).rejects.toThrow('Failed to parse GitHub PR: API rate limit exceeded');
+      await expect(
+        githubPRParserTool.execute({
+          context: {
+            prUrl: 'https://github.com/owner/repo/pull/123',
+            includeCommits: false,
+            includeDiffUrls: false,
+          },
+        }),
+      ).rejects.toThrow('Failed to parse GitHub PR: API rate limit exceeded');
     });
   });
 });
