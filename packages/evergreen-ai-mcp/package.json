@@ -10,7 +10,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "mcp": "node dist/index.js",
+    "start": "npm run build && npm run mcp"
   },
   "keywords": [
     "mastra",
@@ -35,6 +37,7 @@
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@mastra/mcp": "^0.10.11",
     "@sentry/evergreen-ai-agents": "0.0.1"
   },
   "devDependencies": {
