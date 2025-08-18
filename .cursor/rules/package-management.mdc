@@ -1,0 +1,22 @@
+---
+description: NPM package management requirements
+globs: ["package.json", "package-lock.json", "*.md"]
+alwaysApply: true
+---
+
+# Package Management
+
+## NPM Requirements
+
+- Always use `npm` for package management
+- Use `npm install` instead of `yarn` or `pnpm`
+- Use `npm run` for running scripts
+- When suggesting commands or writing documentation, always reference npm commands
+- Never suggest yarn or pnpm alternatives
+
+## Examples
+
+- Install dependencies: `npm install`
+- Install dev dependency: `npm install --save-dev <package>`
+- Run scripts: `npm run <script-name>`
+- Install specific version: `npm install <package>@<version>`

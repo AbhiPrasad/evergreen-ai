@@ -2,10 +2,13 @@
 import { Mastra } from '@mastra/core/mastra';
 import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
-import { getRepositoryChangelogTool, getLatestReleaseTool } from './tools/github-changelog-tool';
-import { dependencyChangelogSummarizerTool } from './tools/dependency-changelog-agent';
+import { changelogSummaryAgent } from './agents/changelog-summary-agent';
+import { fetchChangelogTool } from './tools/fetch-changelog-tool';
 
 export const mastra = new Mastra({
+  agents: {
+    changelogSummaryAgent
+  },
   storage: new LibSQLStore({
     // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
     url: ":memory:",
@@ -17,4 +20,4 @@ export const mastra = new Mastra({
 });
 
 // Export tools for direct use
-export { getRepositoryChangelogTool, getLatestReleaseTool, dependencyChangelogSummarizerTool };
+export { fetchChangelogTool };

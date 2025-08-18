@@ -1,0 +1,8 @@
+# Cursor Rules
+
+## Package Management
+
+- Always use `npm` for package management
+- Use `npm install` instead of `yarn` or `pnpm`
+- Use `npm run` for running scripts
+- When suggesting commands or writing documentation, always reference npm commands
