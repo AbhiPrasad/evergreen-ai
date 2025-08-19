@@ -86,8 +86,8 @@ export type DependencyAnalysis = z.infer<typeof dependencyAnalysisSchema>;
 /**
  * Comprehensive tool for analyzing JavaScript/TypeScript dependency usage
  */
-export const dependencyAnalyzerTool = createTool({
-  id: 'dependency-analyzer',
+export const javascriptTypeScriptDependencyAnalysisTool = createTool({
+  id: 'javascript-typescript-dependency-analysis',
   description:
     'Analyzes JavaScript/TypeScript code to identify how dependencies are used, their criticality, and provides recommendations',
   inputSchema: z.object({

@@ -31,21 +31,21 @@ vi.mock('./package-manager-detector-tool', () => ({
   },
 }));
 
-import { dependencyAnalyzerTool } from './dependency-analyzer-tool';
+import { javascriptTypeScriptDependencyAnalysisTool } from './js-ts-dependency-analyzer-tool';
 
 const mockFs = vi.mocked(fs);
 
 describe('dependencyAnalyzerTool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Default fs mocks
     mockFs.existsSync = vi.fn().mockReturnValue(true);
     mockFs.readdirSync = vi.fn().mockReturnValue([]);
     mockFs.readFileSync = vi.fn().mockReturnValue('');
-    mockFs.statSync = vi.fn().mockReturnValue({ 
-      isDirectory: () => false, 
-      isFile: () => true 
+    mockFs.statSync = vi.fn().mockReturnValue({
+      isDirectory: () => false,
+      isFile: () => true,
     });
   });
 
@@ -55,29 +55,29 @@ describe('dependencyAnalyzerTool', () => {
 
       await expect(
         dependencyAnalyzerTool.execute({
-          context: { projectPath: '/non/existent/path' }
-        })
+          context: { projectPath: '/non/existent/path' },
+        }),
       ).rejects.toThrow('Project path does not exist');
     });
 
     it('should find and analyze files with simple patterns', async () => {
       const sourceCode = 'import React from "react";';
-      
+
       mockFs.readdirSync = vi.fn().mockReturnValue([
-        { 
-          name: 'test.tsx', 
-          isFile: () => true, 
-          isDirectory: () => false 
-        }
+        {
+          name: 'test.tsx',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       mockFs.readFileSync = vi.fn().mockReturnValue(sourceCode);
 
-      const result = await dependencyAnalyzerTool.execute({ 
-        context: { 
-          includePatterns: ['**/*.tsx']  // Use simple pattern without braces
-        } 
+      const result = await dependencyAnalyzerTool.execute({
+        context: {
+          includePatterns: ['**/*.tsx'], // Use simple pattern without braces
+        },
       });
-      
+
       expect(result.files).toHaveLength(1);
       expect(result.dependencies).toHaveLength(1);
       expect(result.dependencies[0].name).toBe('react');
@@ -94,18 +94,18 @@ const fs = require('fs');
 `;
 
       mockFs.readdirSync = vi.fn().mockReturnValue([
-        { 
-          name: 'test.tsx', 
-          isFile: () => true, 
-          isDirectory: () => false 
-        }
+        {
+          name: 'test.tsx',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
       mockFs.readFileSync = vi.fn().mockReturnValue(sourceCode);
 
-      const result = await dependencyAnalyzerTool.execute({ 
-        context: { includePatterns: ['**/*.tsx'] } 
+      const result = await dependencyAnalyzerTool.execute({
+        context: { includePatterns: ['**/*.tsx'] },
       });
-      
+
       const file = result.files[0];
       expect(file.totalImports).toBe(4);
       expect(file.externalDependencies).toEqual(['react', 'fs']);
@@ -118,19 +118,19 @@ import React from 'react';
 import { Component } from 'react';
 import { useState } from 'react';
 `;
-      
+
       const packageJson = {
-        dependencies: { 'react': '^18.0.0' },
+        dependencies: { react: '^18.0.0' },
       };
 
       mockFs.readdirSync = vi.fn().mockReturnValue([
-        { 
-          name: 'test.tsx', 
-          isFile: () => true, 
-          isDirectory: () => false 
-        }
+        {
+          name: 'test.tsx',
+          isFile: () => true,
+          isDirectory: () => false,
+        },
       ]);
-      
+
       mockFs.readFileSync = vi.fn().mockImplementation((filePath: string) => {
         if (filePath.endsWith('package.json')) {
           return JSON.stringify(packageJson);
@@ -138,10 +138,10 @@ import { useState } from 'react';
         return sourceCode;
       });
 
-      const result = await dependencyAnalyzerTool.execute({ 
-        context: { includePatterns: ['**/*.tsx'] } 
+      const result = await dependencyAnalyzerTool.execute({
+        context: { includePatterns: ['**/*.tsx'] },
       });
-      
+
       const reactDep = result.dependencies.find(d => d.name === 'react');
       expect(reactDep?.criticality).toBeDefined();
       expect(reactDep?.usageCount).toBe(3); // Used 3 times

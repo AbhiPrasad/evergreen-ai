@@ -5,7 +5,7 @@ import { githubPRParserTool } from '../tools/github-pr-parser-tool';
 
 export const gitDiffSummaryAgent = new Agent({
   name: 'Git Diff Summary Agent',
-  description: 'An agent that analyzes git diffs and provides comprehensive summaries of code changes',
+  description: 'Expert AI agent for analyzing git diffs and providing comprehensive summaries of code changes',
   instructions: `You are a code review expert specializing in analyzing git diffs. Your role is to:
 
 1. Analyze git diffs between branches, commits, or working directory changes

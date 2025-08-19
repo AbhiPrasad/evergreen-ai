@@ -9,7 +9,8 @@ import { fetchChangelogTool } from './tools/fetch-changelog-tool';
 import { gitDiffTool } from './tools/git-diff-tool';
 import { githubPRParserTool } from './tools/github-pr-parser-tool';
 import { packageManagerDetectorTool } from './tools/package-manager-detector-tool';
-import { dependencyAnalyzerTool } from './tools/dependency-analyzer-tool';
+import { javascriptTypeScriptDependencyAnalysisTool } from './tools/js-ts-dependency-analyzer-tool';
+import { packageVersionComparisonTool } from './tools/package-version-comparison-tool';
 
 export const mastra = new Mastra({
   agents: {
@@ -32,14 +33,27 @@ export const mastra = new Mastra({
 globalThis.___MASTRA_TELEMETRY___ = false;
 
 // Export tools for direct use
-export { fetchChangelogTool, gitDiffTool, githubPRParserTool, packageManagerDetectorTool, dependencyAnalyzerTool };
+export {
+  fetchChangelogTool,
+  gitDiffTool,
+  githubPRParserTool,
+  packageManagerDetectorTool,
+  javascriptTypeScriptDependencyAnalysisTool,
+  packageVersionComparisonTool,
+};
 
 // Export types from tools
 export type { FetchChangelogOutput, ChangelogSection } from './tools/fetch-changelog-tool';
 export type { FileChange, DiffStats } from './tools/git-diff-tool';
 export type { GithubPRParserOutput } from './tools/github-pr-parser-tool';
 export type { PackageManagerResult } from './tools/package-manager-detector-tool';
-export type { DependencyAnalysis, DependencyInfo, FileAnalysis, ImportUsage } from './tools/dependency-analyzer-tool';
+export type {
+  DependencyAnalysis,
+  DependencyInfo,
+  FileAnalysis,
+  ImportUsage,
+} from './tools/js-ts-dependency-analyzer-tool';
+export type { PackageVersionComparison } from './tools/package-version-comparison-tool';
 
 // Export agents for direct use
 export {

@@ -37,7 +37,8 @@ export type FetchChangelogOutput = z.infer<typeof outputSchema>;
 // Tool for fetching changelog data
 export const fetchChangelogTool = createTool({
   id: 'fetch-changelog',
-  description: 'Fetches changelog content from a repository CHANGELOG.md file using GitHub API',
+  description:
+    'Fetches changelog content from a repository CHANGELOG.md file using GitHub API. This tool is used to get the changelog of a dependency.',
   inputSchema: z.object({
     owner: z.string().describe('Repository owner'),
     repo: z.string().describe('Repository name'),
@@ -47,7 +48,10 @@ export const fetchChangelogTool = createTool({
       .describe(
         'Path to the changelog file (e.g., CHANGELOG.md, docs/CHANGES.md). If not provided, will try common names',
       ),
-    branch: z.string().default('main').describe('Branch to fetch changelog from (default: main)'),
+    branch: z
+      .string()
+      .optional()
+      .describe('Branch to fetch changelog from (if not provided, will use the repository default branch)'),
     fromVersion: z.string().optional().describe('Starting version for range filtering'),
     toVersion: z.string().optional().describe('Ending version for range filtering'),
     githubToken: z
@@ -71,6 +75,22 @@ export const fetchChangelogTool = createTool({
         auth: authToken, // Optional - will work for public repos without token
       });
 
+      // Determine the branch to use
+      let targetBranch = branch;
+      if (!targetBranch) {
+        // Fetch repository information to get the default branch
+        try {
+          const repoInfo = await octokit.rest.repos.get({
+            owner,
+            repo,
+          });
+          targetBranch = repoInfo.data.default_branch;
+        } catch (err) {
+          // Fall back to 'main' if we can't get repo info
+          targetBranch = 'main';
+        }
+      }
+
       let changelogContent = '';
       let usedFile = '';
 
@@ -81,7 +101,7 @@ export const fetchChangelogTool = createTool({
             owner,
             repo,
             path: changelogPath,
-            ref: branch,
+            ref: targetBranch,
           });
 
           // Handle the response (could be file or directory)
@@ -105,7 +125,7 @@ export const fetchChangelogTool = createTool({
               owner,
               repo,
               path: filename,
-              ref: branch,
+              ref: targetBranch,
             });
 
             // Handle the response (could be file or directory)
@@ -140,7 +160,7 @@ export const fetchChangelogTool = createTool({
           fromVersion || toVersion ? `${fromVersion || 'start'} to ${toVersion || 'latest'}` : 'all versions',
         sourceFile: usedFile,
         repository: `${owner}/${repo}`,
-        branch,
+        branch: targetBranch,
       };
     } catch (error) {
       throw new Error(`Failed to fetch changelog: ${error instanceof Error ? error.message : 'Unknown error'}`);
