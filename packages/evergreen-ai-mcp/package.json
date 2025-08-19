@@ -2,15 +2,15 @@
   "name": "@sentry/evergreen-ai-mcp",
   "version": "0.0.1",
   "description": "Boilerplate package using evergreen-ai-agents",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsdown",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "dev": "tsc --watch",
+    "dev": "tsdown --watch",
     "mcp": "node dist/index.js",
     "start": "npm run build && npm run mcp"
   },
@@ -26,9 +26,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
@@ -44,6 +45,7 @@
     "@types/node": "^24.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
+    "tsdown": "^0.14.1",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
