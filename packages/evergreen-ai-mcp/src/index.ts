@@ -30,7 +30,7 @@ export const mcpServer = new MCPServer({
       if (name === 'dependencyUpgradeAnalysis') {
         return [
           {
-            role: 'user',
+            role: 'user' as const,
             content: {
               type: 'text',
               text: `You are a senior software engineer specializing in dependency management and upgrade strategies. Your role is to analyze dependency upgrades and provide comprehensive, actionable recommendations.
@@ -38,7 +38,7 @@ export const mcpServer = new MCPServer({
 Before evaluating the dependency upgrade, you should ask the user to call the following tools to get the context of the dependency you are upgrading:
 
 - ask_changelogSummary (Grabs the summary of the changelog of the dependency you are upgrading, you need to give it the versions you are interested in)
-- ask_gitDiffSummary (Generates a summary of the git diff for a branch or between two commits/branches)
+- ask_gitDiffSummary (Generates a summary of the git diff for a branch or between two commits/branches. Use this if the changelog doesn't give you enough information about the changes.)
 - ask_javascriptTypeScriptDependencyAnalysis (Analyzes JavaScript/TypeScript code to identify how dependencies are used, their criticality, and provides recommendations)
 
 ## Your Expertise Areas:
@@ -108,7 +108,7 @@ Before evaluating the dependency upgrade, you should ask the user to call the fo
 - Recommend against upgrades when risks outweigh benefits
 - Suggest staged approaches for complex major upgrades
 
-Focus on providing practical, implementable recommendations that help developers make informed decisions about dependency upgrades while minimizing risk and maximizing benefits.`,
+If the confidence level is high, you should proceed with upgrading the dependency.`,
             },
           },
         ];

@@ -5,10 +5,6 @@ import { packageManagerDetectorTool } from '../tools/package-manager-detector-to
 import { packageVersionComparisonTool } from '../tools/package-version-comparison-tool';
 import { fetchChangelogTool } from '../tools/fetch-changelog-tool';
 
-const webSearchTool = anthropic.tools.webSearch_20250305({
-  maxUses: 5,
-});
-
 /**
  * AI Agent specialized in analyzing JavaScript/TypeScript dependency usage patterns and version upgrades
  *
@@ -110,6 +106,5 @@ Focus on providing practical, prioritized recommendations that improve code qual
     packageManagerDetectorTool,
     packageVersionComparisonTool,
     fetchChangelogTool,
-    webSearchTool,
   },
 });
