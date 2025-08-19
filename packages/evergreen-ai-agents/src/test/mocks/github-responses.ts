@@ -1,4 +1,4 @@
-// Mock responses for GitHub CLI commands
+// Mock responses for GitHub API calls
 
 export const mockReleasesList = [
   {
@@ -60,17 +60,16 @@ export const mockPrereleasesList = [
 export const mockTagsList = ['v19.1.1', 'v19.1.0', 'v19.0.0', 'v18.3.1', 'v18.3.0'];
 
 // Error responses
-export const mockGitHubCLIError = {
-  stderr: 'Error: Repository not found or access denied',
-  stdout: '',
+export const mockGitHubAPIError = {
+  message: 'Repository not found or access denied',
+  status: 404,
 };
 
 export const mockNoReleasesResponse = {
-  stdout: '',
-  stderr: '',
+  data: [],
 };
 
 export const mockAuthError = {
-  stderr: "Error: authentication required. Run 'gh auth login'",
-  stdout: '',
+  message: 'Bad credentials',
+  status: 401,
 };

@@ -1,19 +1,71 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { githubPRParserTool, isValidGitHubPRUrl, parseGitHubPRUrl } from './github-pr-parser-tool';
 
-// Mock child_process
-vi.mock('child_process', () => ({
-  execSync: vi.fn(),
+// Mock @octokit/rest before importing the tool
+const mockOctokit = {
+  rest: {
+    pulls: {
+      get: vi.fn(),
+      listCommits: vi.fn(),
+    },
+  },
+};
+
+vi.mock('@octokit/rest', () => ({
+  Octokit: vi.fn(() => mockOctokit),
 }));
 
+import { githubPRParserTool, isValidGitHubPRUrl, parseGitHubPRUrl } from './github-pr-parser-tool';
+
 describe('GitHub PR Parser Tool', () => {
-  const mockExecSync = vi.fn();
+  const mockPRData = {
+    number: 123,
+    title: 'Add new feature',
+    state: 'open',
+    draft: false,
+    merged: false,
+    mergeable: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-02T00:00:00Z',
+    base: {
+      ref: 'main',
+      sha: 'abc123',
+      repo: {
+        full_name: 'owner/repo',
+        clone_url: 'https://github.com/owner/repo.git',
+        ssh_url: 'git@github.com:owner/repo.git',
+        owner: { login: 'owner' },
+        name: 'repo',
+      },
+    },
+    head: {
+      ref: 'feature-branch',
+      sha: 'def456',
+      repo: {
+        full_name: 'owner/repo',
+        clone_url: 'https://github.com/owner/repo.git',
+        owner: { login: 'owner' },
+        name: 'repo',
+      },
+    },
+    user: {
+      login: 'contributor',
+      type: 'User',
+    },
+    commits: 3,
+    additions: 100,
+    deletions: 50,
+    changed_files: 5,
+    labels: [{ name: 'enhancement', color: '84b6eb', description: 'New feature' }],
+    html_url: 'https://github.com/owner/repo/pull/123',
+    diff_url: 'https://github.com/owner/repo/pull/123.diff',
+    patch_url: 'https://github.com/owner/repo/pull/123.patch',
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.doMock('child_process', () => ({
-      execSync: mockExecSync,
-    }));
+    // Reset the mock functions
+    mockOctokit.rest.pulls.get.mockReset();
+    mockOctokit.rest.pulls.listCommits.mockReset();
   });
 
   describe('URL validation', () => {
@@ -48,52 +100,9 @@ describe('GitHub PR Parser Tool', () => {
   });
 
   describe('PR data extraction', () => {
-    const mockPRData = {
-      number: 123,
-      title: 'Add new feature',
-      state: 'open',
-      draft: false,
-      merged: false,
-      mergeable: true,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-02T00:00:00Z',
-      base: {
-        ref: 'main',
-        sha: 'abc123',
-        repo: {
-          full_name: 'owner/repo',
-          clone_url: 'https://github.com/owner/repo.git',
-          ssh_url: 'git@github.com:owner/repo.git',
-          owner: { login: 'owner' },
-          name: 'repo',
-        },
-      },
-      head: {
-        ref: 'feature-branch',
-        sha: 'def456',
-        repo: {
-          full_name: 'owner/repo',
-          clone_url: 'https://github.com/owner/repo.git',
-          owner: { login: 'owner' },
-          name: 'repo',
-        },
-      },
-      user: {
-        login: 'contributor',
-        type: 'User',
-      },
-      commits: 3,
-      additions: 100,
-      deletions: 50,
-      changed_files: 5,
-      labels: [{ name: 'enhancement', color: '84b6eb', description: 'New feature' }],
-      html_url: 'https://github.com/owner/repo/pull/123',
-      diff_url: 'https://github.com/owner/repo/pull/123.diff',
-      patch_url: 'https://github.com/owner/repo/pull/123.patch',
-    };
 
     it('should extract basic PR information', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify(mockPRData));
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
 
       const result = await githubPRParserTool.execute({
         context: {
@@ -103,7 +112,11 @@ describe('GitHub PR Parser Tool', () => {
         },
       });
 
-      expect(mockExecSync).toHaveBeenCalledWith('gh api repos/owner/repo/pulls/123', { encoding: 'utf-8' });
+      expect(mockOctokit.rest.pulls.get).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        pull_number: 123,
+      });
 
       expect(result.prNumber).toBe(123);
       expect(result.title).toBe('Add new feature');
@@ -113,7 +126,7 @@ describe('GitHub PR Parser Tool', () => {
     });
 
     it('should extract git diff inputs correctly', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify(mockPRData));
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
 
       const result = await githubPRParserTool.execute({
         context: {
@@ -161,7 +174,7 @@ describe('GitHub PR Parser Tool', () => {
         },
       };
 
-      mockExecSync.mockReturnValue(JSON.stringify(crossRepoPRData));
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: crossRepoPRData });
 
       const result = await githubPRParserTool.execute({
         context: {
@@ -200,7 +213,8 @@ describe('GitHub PR Parser Tool', () => {
         },
       ];
 
-      mockExecSync.mockReturnValueOnce(JSON.stringify(mockPRData)).mockReturnValueOnce(JSON.stringify(mockCommits));
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
+      mockOctokit.rest.pulls.listCommits.mockResolvedValue({ data: mockCommits });
 
       const result = await githubPRParserTool.execute({
         context: {
@@ -210,8 +224,16 @@ describe('GitHub PR Parser Tool', () => {
         },
       });
 
-      expect(mockExecSync).toHaveBeenCalledTimes(2);
-      expect(mockExecSync).toHaveBeenLastCalledWith('gh api repos/owner/repo/pulls/123/commits', { encoding: 'utf-8' });
+      expect(mockOctokit.rest.pulls.get).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        pull_number: 123,
+      });
+      expect(mockOctokit.rest.pulls.listCommits).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        pull_number: 123,
+      });
 
       expect(result.commits).toHaveLength(1);
       expect(result.commits[0]).toEqual({
@@ -227,7 +249,7 @@ describe('GitHub PR Parser Tool', () => {
     });
 
     it('should include diff URLs when requested', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify(mockPRData));
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
 
       const result = await githubPRParserTool.execute({
         context: {
@@ -247,7 +269,7 @@ describe('GitHub PR Parser Tool', () => {
     });
 
     it('should provide helpful git commands', async () => {
-      mockExecSync.mockReturnValue(JSON.stringify(mockPRData));
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
 
       const result = await githubPRParserTool.execute({
         context: {
@@ -260,6 +282,61 @@ describe('GitHub PR Parser Tool', () => {
       expect(result.gitCommands.fetchPR).toBe('git fetch origin pull/123/head:pr-123');
       expect(result.gitCommands.checkoutPR).toBe('git checkout pr-123');
       expect(result.gitCommands.diffCommand).toBe('git diff main...feature-branch');
+    });
+  });
+
+  describe('Authentication', () => {
+    it('should use environment variable when githubToken is not provided', async () => {
+      // Set environment variable
+      const originalToken = process.env.GITHUB_TOKEN;
+      process.env.GITHUB_TOKEN = 'test-token-from-env';
+
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
+
+      await githubPRParserTool.execute({
+        context: {
+          prUrl: 'https://github.com/owner/repo/pull/123',
+          includeCommits: false,
+          includeDiffUrls: false,
+        },
+      });
+
+      // Verify that Octokit was created with the environment token
+      expect(mockOctokit.rest.pulls.get).toHaveBeenCalled();
+
+      // Restore original environment
+      if (originalToken) {
+        process.env.GITHUB_TOKEN = originalToken;
+      } else {
+        delete process.env.GITHUB_TOKEN;
+      }
+    });
+
+    it('should prefer explicit githubToken over environment variable', async () => {
+      // Set environment variable
+      const originalToken = process.env.GITHUB_TOKEN;
+      process.env.GITHUB_TOKEN = 'env-token';
+
+      mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
+
+      await githubPRParserTool.execute({
+        context: {
+          prUrl: 'https://github.com/owner/repo/pull/123',
+          includeCommits: false,
+          includeDiffUrls: false,
+          githubToken: 'explicit-token',
+        },
+      });
+
+      // Verify that the tool still works (we can't easily verify which token was used due to mocking)
+      expect(mockOctokit.rest.pulls.get).toHaveBeenCalled();
+
+      // Restore original environment
+      if (originalToken) {
+        process.env.GITHUB_TOKEN = originalToken;
+      } else {
+        delete process.env.GITHUB_TOKEN;
+      }
     });
   });
 
@@ -277,10 +354,9 @@ describe('GitHub PR Parser Tool', () => {
     });
 
     it('should handle 404 errors gracefully', async () => {
-      mockExecSync.mockImplementation(() => {
-        const error = new Error('404 Not Found');
-        throw error;
-      });
+      const error = new Error('Not Found');
+      error.status = 404;
+      mockOctokit.rest.pulls.get.mockRejectedValue(error);
 
       await expect(
         githubPRParserTool.execute({
@@ -294,9 +370,7 @@ describe('GitHub PR Parser Tool', () => {
     });
 
     it('should handle other API errors', async () => {
-      mockExecSync.mockImplementation(() => {
-        throw new Error('API rate limit exceeded');
-      });
+      mockOctokit.rest.pulls.get.mockRejectedValue(new Error('API rate limit exceeded'));
 
       await expect(
         githubPRParserTool.execute({

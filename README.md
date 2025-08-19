@@ -18,6 +18,7 @@ npm start
 ## Architecture
 
 - **Mastra Framework**: Core AI application framework
-- **GitHub CLI**: Used for fetching repository data
+- **GitHub API**: Used for fetching repository data via octokit.js
+  - Supports environment variables: `GITHUB_TOKEN`, `GH_TOKEN`, or `GITHUB_ACCESS_TOKEN`
 - **LibSQL**: Storage for telemetry and memory
 - **Anthropic Claude**: AI model for intelligent processing

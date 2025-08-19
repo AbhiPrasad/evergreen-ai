@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { execSync } from 'node:child_process';
+import { Octokit } from '@octokit/rest';
 
 // Define schemas for nested objects
 const repositorySchema = z.object({
@@ -80,11 +80,12 @@ const gitDiffToolConfigSchema = z.object({
 // Tool for parsing GitHub PR URLs and extracting git diff inputs
 export const githubPRParserTool = createTool({
   id: 'github-pr-parser',
-  description: 'Parses GitHub PR URLs and extracts information needed for git diff tool',
+  description: 'Parses GitHub PR URLs and extracts information needed for git diff tool using GitHub API',
   inputSchema: z.object({
     prUrl: z.string().url().describe('GitHub pull request URL (e.g., https://github.com/owner/repo/pull/123)'),
     includeCommits: z.boolean().default(false).describe('Whether to include individual commit SHAs from the PR'),
     includeDiffUrls: z.boolean().default(false).describe('Whether to include GitHub diff/patch URLs'),
+    githubToken: z.string().optional().describe('GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables'),
   }),
   outputSchema: z.object({
     prNumber: z.number().describe('Pull request number'),
@@ -106,7 +107,7 @@ export const githubPRParserTool = createTool({
     gitDiffToolConfig: gitDiffToolConfigSchema.describe('Ready-to-use config for git diff tool'),
   }),
   execute: async ({ context }) => {
-    const { prUrl, includeCommits, includeDiffUrls } = context;
+    const { prUrl, includeCommits, includeDiffUrls, githubToken } = context;
 
     try {
       // Parse the PR URL
@@ -117,12 +118,24 @@ export const githubPRParserTool = createTool({
 
       const [, owner, repo, prNumber] = urlMatch;
 
-      // Use GitHub CLI to fetch PR information
+      // Get auth token from parameter or environment variables
+      const authToken = githubToken || 
+        process.env.GITHUB_TOKEN || 
+        process.env.GH_TOKEN || 
+        process.env.GITHUB_ACCESS_TOKEN;
 
-      // Fetch PR details using gh api
-      const prCommand = `gh api repos/${owner}/${repo}/pulls/${prNumber}`;
-      const prOutput = execSync(prCommand, { encoding: 'utf-8' });
-      const prData = JSON.parse(prOutput);
+      // Create Octokit instance
+      const octokit = new Octokit({
+        auth: authToken, // Optional - will work for public repos without token
+      });
+
+      // Fetch PR details using GitHub API
+      const prResponse = await octokit.rest.pulls.get({
+        owner,
+        repo,
+        pull_number: parseInt(prNumber),
+      });
+      const prData = prResponse.data;
 
       // Extract essential information
       const result: any = {
@@ -188,9 +201,12 @@ export const githubPRParserTool = createTool({
       // Include commits if requested
       if (includeCommits) {
         try {
-          const commitsCommand = `gh api repos/${owner}/${repo}/pulls/${prNumber}/commits`;
-          const commitsOutput = execSync(commitsCommand, { encoding: 'utf-8' });
-          const commitsData = JSON.parse(commitsOutput);
+          const commitsResponse = await octokit.rest.pulls.listCommits({
+            owner,
+            repo,
+            pull_number: parseInt(prNumber),
+          });
+          const commitsData = commitsResponse.data;
 
           result.commits = commitsData.map((commit: any) => ({
             sha: commit.sha,
@@ -249,8 +265,8 @@ export const githubPRParserTool = createTool({
       };
 
       return result;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('404')) {
+    } catch (error: any) {
+      if (error?.status === 404 || (error instanceof Error && error.message.includes('404'))) {
         throw new Error(`Pull request not found: ${prUrl}. Make sure the PR exists and you have access to it.`);
       }
       throw new Error(`Failed to parse GitHub PR: ${error instanceof Error ? error.message : 'Unknown error'}`);

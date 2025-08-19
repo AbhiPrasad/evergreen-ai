@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { execSync } from 'node:child_process';
+import { Octokit } from '@octokit/rest';
 
 // Define the schema for PR/issue links
 const prLinkSchema = z.object({
@@ -37,7 +37,7 @@ export type FetchChangelogOutput = z.infer<typeof outputSchema>;
 // Tool for fetching changelog data
 export const fetchChangelogTool = createTool({
   id: 'fetch-changelog',
-  description: 'Fetches changelog content from a repository CHANGELOG.md file',
+  description: 'Fetches changelog content from a repository CHANGELOG.md file using GitHub API',
   inputSchema: z.object({
     owner: z.string().describe('Repository owner'),
     repo: z.string().describe('Repository name'),
@@ -50,13 +50,23 @@ export const fetchChangelogTool = createTool({
     branch: z.string().default('main').describe('Branch to fetch changelog from (default: main)'),
     fromVersion: z.string().optional().describe('Starting version for range filtering'),
     toVersion: z.string().optional().describe('Ending version for range filtering'),
+    githubToken: z.string().optional().describe('GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables'),
   }),
   outputSchema,
   execute: async ({ context }) => {
-    const { owner, repo, changelogPath, branch, fromVersion, toVersion } = context;
+    const { owner, repo, changelogPath, branch, fromVersion, toVersion, githubToken } = context;
 
     try {
-      // Use GitHub CLI to fetch CHANGELOG.md file
+      // Get auth token from parameter or environment variables
+      const authToken = githubToken || 
+        process.env.GITHUB_TOKEN || 
+        process.env.GH_TOKEN || 
+        process.env.GITHUB_ACCESS_TOKEN;
+
+      // Create Octokit instance
+      const octokit = new Octokit({
+        auth: authToken, // Optional - will work for public repos without token
+      });
 
       let changelogContent = '';
       let usedFile = '';
@@ -64,13 +74,21 @@ export const fetchChangelogTool = createTool({
       if (changelogPath) {
         // Use the specified changelog path
         try {
-          const command = `gh api repos/${owner}/${repo}/contents/${changelogPath}?ref=${branch}`;
-          const output = execSync(command, { encoding: 'utf-8' });
-          const fileData = JSON.parse(output);
+          const response = await octokit.rest.repos.getContent({
+            owner,
+            repo,
+            path: changelogPath,
+            ref: branch,
+          });
 
-          // Decode base64 content
-          changelogContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
-          usedFile = changelogPath;
+          // Handle the response (could be file or directory)
+          if ('content' in response.data && typeof response.data.content === 'string') {
+            // Decode base64 content
+            changelogContent = Buffer.from(response.data.content, 'base64').toString('utf-8');
+            usedFile = changelogPath;
+          } else {
+            throw new Error(`Path ${changelogPath} is not a file or content is not available`);
+          }
         } catch (err) {
           throw new Error(`Changelog file not found at path: ${changelogPath}`);
         }
@@ -80,14 +98,20 @@ export const fetchChangelogTool = createTool({
 
         for (const filename of changelogFiles) {
           try {
-            const command = `gh api repos/${owner}/${repo}/contents/${filename}?ref=${branch}`;
-            const output = execSync(command, { encoding: 'utf-8' });
-            const fileData = JSON.parse(output);
+            const response = await octokit.rest.repos.getContent({
+              owner,
+              repo,
+              path: filename,
+              ref: branch,
+            });
 
-            // Decode base64 content
-            changelogContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
-            usedFile = filename;
-            break;
+            // Handle the response (could be file or directory)
+            if ('content' in response.data && typeof response.data.content === 'string') {
+              // Decode base64 content
+              changelogContent = Buffer.from(response.data.content, 'base64').toString('utf-8');
+              usedFile = filename;
+              break;
+            }
           } catch (err) {
             // File doesn't exist, try next one
             continue;

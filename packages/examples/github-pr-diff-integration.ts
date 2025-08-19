@@ -9,7 +9,7 @@ import { githubPRParserTool, gitDiffTool, gitDiffSummaryAgent } from '@evergreen
  * 3. Get an AI-powered summary of the changes
  */
 
-async function analyzeGitHubPR(prUrl: string) {
+async function analyzeGitHubPR(prUrl: string, githubToken?: string) {
   console.log(`\n🔍 Analyzing GitHub PR: ${prUrl}\n`);
 
   try {
@@ -20,6 +20,7 @@ async function analyzeGitHubPR(prUrl: string) {
         prUrl,
         includeCommits: true,
         includeDiffUrls: true,
+        githubToken,
       },
     });
 
@@ -106,10 +107,10 @@ async function analyzeGitHubPR(prUrl: string) {
  *
  * This shows how to combine all tools for a comprehensive PR review
  */
-async function completeWorkflow(prUrl: string, localRepoPath?: string) {
+async function completeWorkflow(prUrl: string, localRepoPath?: string, githubToken?: string) {
   try {
     // Step 1: Get PR information
-    const prInfo = await analyzeGitHubPR(prUrl);
+    const prInfo = await analyzeGitHubPR(prUrl, githubToken);
 
     // Step 2: If local repo is available, generate actual diff
     if (localRepoPath) {
@@ -170,9 +171,12 @@ async function main() {
   await completeWorkflow(examplePRUrl, localRepoPath);
   */
 
-  console.log('\n\n💡 Tip: This tool requires GitHub CLI (gh) to be installed and authenticated.');
-  console.log('   Install: https://cli.github.com/');
-  console.log('   Authenticate: gh auth login');
+  console.log('\n\n💡 Tip: This tool uses the GitHub API via octokit.js.');
+  console.log('   For private repositories or higher rate limits, provide a GitHub personal access token.');
+  console.log('   You can either:');
+  console.log('   1. Pass it as the githubToken parameter');
+  console.log('   2. Set environment variable: GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN');
+  console.log('   Create a token at: https://github.com/settings/tokens');
 }
 
 // Execute if run directly

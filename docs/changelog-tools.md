@@ -9,7 +9,7 @@ link extraction.
 
 ### Features
 
-- Fetches changelog files from GitHub repositories using GitHub CLI
+- Fetches changelog files from GitHub repositories using GitHub API
 - Automatically finds common changelog filenames (CHANGELOG.md, CHANGES.md, etc.)
 - Parses changelog into structured sections
 - Extracts PR and issue links from each section
@@ -137,7 +137,12 @@ The tool provides clear error messages:
 
 ### Requirements
 
-- GitHub CLI (`gh`) must be installed and authenticated
+- GitHub personal access token (optional for public repositories)
+- Create a token at: https://github.com/settings/tokens
+- Pass token as `githubToken` parameter or set one of these environment variables:
+  - `GITHUB_TOKEN` (recommended, used by GitHub Actions)
+  - `GH_TOKEN` (used by GitHub CLI)
+  - `GITHUB_ACCESS_TOKEN` (alternative)
 - Repository must be accessible with your GitHub credentials
 
 ## Changelog Summary Agent

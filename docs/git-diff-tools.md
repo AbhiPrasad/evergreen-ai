@@ -251,9 +251,12 @@ const diff = await gitDiffTool.execute({
 
 ### Requirements
 
-- GitHub CLI (`gh`) must be installed and authenticated
-- Install: `brew install gh` (macOS) or see https://cli.github.com/
-- Authenticate: `gh auth login`
+- GitHub personal access token (optional for public repositories)
+- Create a token at: https://github.com/settings/tokens
+- Pass token as `githubToken` parameter or set one of these environment variables:
+  - `GITHUB_TOKEN` (recommended, used by GitHub Actions)
+  - `GH_TOKEN` (used by GitHub CLI)
+  - `GITHUB_ACCESS_TOKEN` (alternative)
 
 ## Git Diff Summary Agent
 
