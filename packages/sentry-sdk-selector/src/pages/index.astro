@@ -1,0 +1,54 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SentrySDKSelector from '../components/SentrySDKSelector';
+---
+
+<Layout title="Sentry SDK Changelog Summary">
+  <main>
+    <div class="container">
+      <h1>Sentry SDK Changelog Summary</h1>
+      <p>
+        Select a Sentry SDK, select a starting version, and select an ending version to get a summary of the changes.
+      </p>
+      <SentrySDKSelector client:load />
+    </div>
+  </main>
+</Layout>
+
+<style>
+  main {
+    margin: auto;
+    padding: 1rem;
+    width: 800px;
+    max-width: calc(100% - 2rem);
+    color: white;
+    font-size: 20px;
+    line-height: 1.6;
+  }
+
+  .container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    background: linear-gradient(45deg, #fff, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  p {
+    text-align: center;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+</style>
