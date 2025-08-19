@@ -1,0 +1,27 @@
+---
+description: General development guidelines and best practices
+globs: ['**/*.ts', '**/*.js', '**/*.tsx', '**/*.jsx']
+alwaysApply: true
+---
+
+# General Development Guidelines
+
+## Import Guidelines
+
+- **AVOID** dynamic imports (`await import()`) in favor of direct imports
+- Dynamic imports should only be used when absolutely necessary (e.g., conditional loading, code splitting)
+- Prefer static imports at the top of files for better tree-shaking and bundle analysis
+- **ALWAYS** prefix Node.js standard library imports with `node:`
+
+## Cursor Configuration
+
+- Use `.cursor/rules/` directory for project-specific rules (not `.cursorrules`)
+- Follow the official Cursor documentation: https://docs.cursor.com/en/context/rules
+- Each rule file should have proper frontmatter with description and globs
+
+## Code Quality
+
+- Maintain consistent coding style across the project
+- Use TypeScript for type safety
+- Write comprehensive tests for new functionality
+- Follow existing patterns and conventions in the codebase

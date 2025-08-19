@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { execSync } from 'node:child_process';
 
 // Define the schema for commit info
 const commitInfoSchema = z.object({
@@ -64,7 +65,6 @@ export const gitDiffTool = createTool({
     const { repository = '.', base, compare, filePath, includeContext, diffType, excludePatterns } = context;
 
     try {
-      const { execSync } = await import('child_process');
 
       // Build the git diff command
       let command = 'git';

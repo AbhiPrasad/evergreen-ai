@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { execSync } from 'node:child_process';
 
 // Define the schema for PR/issue links
 const prLinkSchema = z.object({
@@ -56,7 +57,6 @@ export const fetchChangelogTool = createTool({
 
     try {
       // Use GitHub CLI to fetch CHANGELOG.md file
-      const { execSync } = await import('child_process');
 
       let changelogContent = '';
       let usedFile = '';

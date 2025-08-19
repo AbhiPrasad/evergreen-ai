@@ -25,12 +25,6 @@ export const mcpServer = new MCPServer({
   },
 });
 
-// Re-export everything from the main agents package for convenience
-export * from '@sentry/evergreen-ai-agents';
-
-// Export the package version
-export const packageVersion = '0.0.1';
-
 // Main function to start the MCP server
 export async function startMCPServer() {
   try {

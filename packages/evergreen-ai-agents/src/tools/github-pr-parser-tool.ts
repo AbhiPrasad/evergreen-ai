@@ -1,5 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { execSync } from 'node:child_process';
 
 // Define schemas for nested objects
 const repositorySchema = z.object({
@@ -117,7 +118,6 @@ export const githubPRParserTool = createTool({
       const [, owner, repo, prNumber] = urlMatch;
 
       // Use GitHub CLI to fetch PR information
-      const { execSync } = await import('child_process');
 
       // Fetch PR details using gh api
       const prCommand = `gh api repos/${owner}/${repo}/pulls/${prNumber}`;
