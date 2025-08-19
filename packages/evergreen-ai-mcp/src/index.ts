@@ -5,8 +5,10 @@ import {
   fetchChangelogTool,
   gitDiffTool,
   githubPRParserTool,
+  dependencyAnalyzerTool,
   changelogSummaryAgent,
   gitDiffSummaryAgent,
+  dependencyAnalysisAgent,
 } from '@sentry/evergreen-ai-agents';
 
 // Create MCP Server with all available tools and agents
@@ -19,10 +21,12 @@ export const mcpServer = new MCPServer({
     fetchChangelog: fetchChangelogTool,
     gitDiff: gitDiffTool,
     githubPRParser: githubPRParserTool,
+    dependencyAnalyzer: dependencyAnalyzerTool,
   },
   agents: {
     changelogSummary: changelogSummaryAgent,
     gitDiffSummary: gitDiffSummaryAgent,
+    dependencyAnalysis: dependencyAnalysisAgent,
   },
 });
 
