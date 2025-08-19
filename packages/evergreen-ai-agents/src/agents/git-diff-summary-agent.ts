@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { anthropic } from '@ai-sdk/anthropic';
 import { gitDiffTool } from '../tools/git-diff-tool';
+import { githubPRParserTool } from '../tools/github-pr-parser-tool';
 
 export const gitDiffSummaryAgent = new Agent({
   name: 'Git Diff Summary Agent',
@@ -70,5 +71,6 @@ When summarizing git diffs:
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: {
     gitDiff: gitDiffTool,
+    githubPRParser: githubPRParserTool,
   },
 });
