@@ -130,21 +130,7 @@ export const fetchChangelogTool = createTool({
       const sections = parseChangelogSections(changelogContent);
 
       // Filter by version range if provided
-      const filteredSections =
-        fromVersion || toVersion
-          ? sections.filter(({ version }) => {
-              if (!version) {
-                return false;
-              }
-              if (fromVersion && compareVersions(version, fromVersion) < 0) {
-                return false;
-              }
-              if (toVersion && compareVersions(version, toVersion) > 0) {
-                return false;
-              }
-              return true;
-            })
-          : sections;
+      const filteredSections = filterSectionsByVersionRange(sections, fromVersion, toVersion);
 
       return {
         changelog: filteredSections,
@@ -163,7 +149,7 @@ export const fetchChangelogTool = createTool({
 });
 
 // Helper function to parse changelog sections
-function parseChangelogSections(content: string) {
+export function parseChangelogSections(content: string) {
   const sections: Array<{
     version?: string;
     date?: string;
@@ -246,8 +232,45 @@ function extractPRAndIssueLinks(content: string): Array<{ number: string; url: s
   return links;
 }
 
+// Filter changelog sections by version range
+export function filterSectionsByVersionRange(
+  sections: Array<{
+    version?: string;
+    date?: string;
+    content: string;
+    rawContent: string;
+    prLinks: Array<{ number: string; url: string; type: 'pr' | 'issue' }>;
+  }>,
+  fromVersion?: string,
+  toVersion?: string,
+) {
+  // If no version filters are provided, return all sections
+  if (!fromVersion && !toVersion) {
+    return sections;
+  }
+
+  return sections.filter(({ version }) => {
+    // Always include sections without version numbers
+    if (!version) {
+      return true;
+    }
+
+    // Check fromVersion constraint
+    if (fromVersion && compareVersions(version, fromVersion) < 0) {
+      return false;
+    }
+
+    // Check toVersion constraint
+    if (toVersion && compareVersions(version, toVersion) > 0) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 // Simple version comparison function
-function compareVersions(a: string, b: string): number {
+export function compareVersions(a: string, b: string): number {
   // Remove 'v' prefix if present
   const cleanA = a.replace(/^v/, '');
   const cleanB = b.replace(/^v/, '');
