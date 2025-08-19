@@ -100,7 +100,6 @@ describe('GitHub PR Parser Tool', () => {
   });
 
   describe('PR data extraction', () => {
-
     it('should extract basic PR information', async () => {
       mockOctokit.rest.pulls.get.mockResolvedValue({ data: mockPRData });
 

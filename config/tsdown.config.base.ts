@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsdown'
+import { defineConfig } from 'tsdown';
 
 /**
  * Base tsdown configuration for all packages in the monorepo
@@ -10,6 +10,6 @@ export const baseConfig = defineConfig({
   clean: true,
   unbundle: true,
   exports: true,
-})
+});
 
-export default baseConfig
+export default baseConfig;

@@ -13,7 +13,8 @@ import {
 export const mcpServer = new MCPServer({
   name: 'Evergreen AI MCP Server',
   version: '0.0.1',
-  description: 'MCP server exposing Evergreen AI tools and agents for git operations, changelog analysis, and GitHub PR parsing',
+  description:
+    'MCP server exposing Evergreen AI tools and agents for git operations, changelog analysis, and GitHub PR parsing',
   tools: {
     fetchChangelog: fetchChangelogTool,
     gitDiff: gitDiffTool,

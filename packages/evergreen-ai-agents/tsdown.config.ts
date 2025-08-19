@@ -1,3 +1,3 @@
-import { baseConfig } from '../../config/tsdown.config.base.js'
+import { baseConfig } from '../../config/tsdown.config.base.js';
 
-export default baseConfig
+export default baseConfig;

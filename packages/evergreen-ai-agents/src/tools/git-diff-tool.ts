@@ -65,7 +65,6 @@ export const gitDiffTool = createTool({
     const { repository = '.', base, compare, filePath, includeContext, diffType, excludePatterns } = context;
 
     try {
-
       // Build the git diff command
       let command = 'git';
 

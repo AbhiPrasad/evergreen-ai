@@ -85,7 +85,12 @@ export const githubPRParserTool = createTool({
     prUrl: z.string().url().describe('GitHub pull request URL (e.g., https://github.com/owner/repo/pull/123)'),
     includeCommits: z.boolean().default(false).describe('Whether to include individual commit SHAs from the PR'),
     includeDiffUrls: z.boolean().default(false).describe('Whether to include GitHub diff/patch URLs'),
-    githubToken: z.string().optional().describe('GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables'),
+    githubToken: z
+      .string()
+      .optional()
+      .describe(
+        'GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables',
+      ),
   }),
   outputSchema: z.object({
     prNumber: z.number().describe('Pull request number'),
@@ -119,10 +124,8 @@ export const githubPRParserTool = createTool({
       const [, owner, repo, prNumber] = urlMatch;
 
       // Get auth token from parameter or environment variables
-      const authToken = githubToken || 
-        process.env.GITHUB_TOKEN || 
-        process.env.GH_TOKEN || 
-        process.env.GITHUB_ACCESS_TOKEN;
+      const authToken =
+        githubToken || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
 
       // Create Octokit instance
       const octokit = new Octokit({

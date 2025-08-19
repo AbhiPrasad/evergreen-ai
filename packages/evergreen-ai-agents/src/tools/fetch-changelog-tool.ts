@@ -50,7 +50,12 @@ export const fetchChangelogTool = createTool({
     branch: z.string().default('main').describe('Branch to fetch changelog from (default: main)'),
     fromVersion: z.string().optional().describe('Starting version for range filtering'),
     toVersion: z.string().optional().describe('Ending version for range filtering'),
-    githubToken: z.string().optional().describe('GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables'),
+    githubToken: z
+      .string()
+      .optional()
+      .describe(
+        'GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables',
+      ),
   }),
   outputSchema,
   execute: async ({ context }) => {
@@ -58,10 +63,8 @@ export const fetchChangelogTool = createTool({
 
     try {
       // Get auth token from parameter or environment variables
-      const authToken = githubToken || 
-        process.env.GITHUB_TOKEN || 
-        process.env.GH_TOKEN || 
-        process.env.GITHUB_ACCESS_TOKEN;
+      const authToken =
+        githubToken || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
 
       // Create Octokit instance
       const octokit = new Octokit({
@@ -127,23 +130,21 @@ export const fetchChangelogTool = createTool({
       const sections = parseChangelogSections(changelogContent);
 
       // Filter by version range if provided
-      let filteredSections = sections;
-      if (fromVersion || toVersion) {
-        filteredSections = sections.filter(section => {
-          const version = section.version;
-          if (!version) return false;
-
-          let include = true;
-          if (fromVersion && compareVersions(version, fromVersion) < 0) {
-            include = false;
-          }
-          if (toVersion && compareVersions(version, toVersion) > 0) {
-            include = false;
-          }
-
-          return include;
-        });
-      }
+      const filteredSections =
+        fromVersion || toVersion
+          ? sections.filter(({ version }) => {
+              if (!version) {
+                return false;
+              }
+              if (fromVersion && compareVersions(version, fromVersion) < 0) {
+                return false;
+              }
+              if (toVersion && compareVersions(version, toVersion) > 0) {
+                return false;
+              }
+              return true;
+            })
+          : sections;
 
       return {
         changelog: filteredSections,
