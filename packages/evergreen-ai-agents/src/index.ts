@@ -3,7 +3,7 @@ import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
 import { changelogSummaryAgent } from './agents/changelog-summary-agent';
 import { gitDiffSummaryAgent } from './agents/git-diff-summary-agent';
-import { dependencyAnalysisAgent } from './agents/dependency-analysis-agent';
+import { javascriptTypeScriptDependencyAnalysisAgent } from './agents/js-ts-dependency-analysis-agent';
 import { dependencyUpgradeRecommendationAgent } from './agents/dependency-upgrade-recommendation-agent';
 import { fetchChangelogTool } from './tools/fetch-changelog-tool';
 import { gitDiffTool } from './tools/git-diff-tool';
@@ -15,7 +15,7 @@ export const mastra = new Mastra({
   agents: {
     changelogSummaryAgent,
     gitDiffSummaryAgent,
-    dependencyAnalysisAgent,
+    javascriptTypeScriptDependencyAnalysisAgent,
     dependencyUpgradeRecommendationAgent,
   },
   storage: new LibSQLStore({
@@ -42,7 +42,12 @@ export type { PackageManagerResult } from './tools/package-manager-detector-tool
 export type { DependencyAnalysis, DependencyInfo, FileAnalysis, ImportUsage } from './tools/dependency-analyzer-tool';
 
 // Export agents for direct use
-export { changelogSummaryAgent, gitDiffSummaryAgent, dependencyAnalysisAgent, dependencyUpgradeRecommendationAgent };
+export {
+  changelogSummaryAgent,
+  gitDiffSummaryAgent,
+  javascriptTypeScriptDependencyAnalysisAgent,
+  dependencyUpgradeRecommendationAgent,
+};
 
 // Export types from agents
 // Note: dependency-upgrade-recommendation-agent currently doesn't export any types

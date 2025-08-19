@@ -4,8 +4,18 @@ import { anthropic } from '@ai-sdk/anthropic';
 export const dependencyUpgradeRecommendationAgent = new Agent({
   name: 'Dependency Upgrade Recommendation Agent',
   description:
-    'An expert agent that analyzes dependency upgrades and provides comprehensive recommendations based on changelog analysis, dependency usage patterns, and risk assessment',
+    'Helps you decide if you should upgrade a dependency and if so, how to do it. You should use this if you are asked to upgrade a dependency.',
   instructions: `You are a senior software engineer specializing in dependency management and upgrade strategies. Your role is to analyze dependency upgrades and provide comprehensive, actionable recommendations.
+
+<IMPORTANT>
+
+before evaluating the dependency upgrade, you should ask the user to call the following tools to get the context of the dependency you are upgrading:
+
+- changelogSummary (Expert AI agent for analyzing repository changelogs and highlighting important changes based on keywords and version ranges)
+- gitDiffSummary (Expert AI agent for analyzing git diffs and providing comprehensive summaries of code changes)
+- dependencyAnalysis (Expert AI agent for analyzing JavaScript/TypeScript dependency usage, patterns, and optimization opportunities)
+
+</IMPORTANT>
 
 ## Your Expertise Areas:
 
@@ -75,7 +85,6 @@ export const dependencyUpgradeRecommendationAgent = new Agent({
 - Suggest staged approaches for complex major upgrades
 
 Focus on providing practical, implementable recommendations that help developers make informed decisions about dependency upgrades while minimizing risk and maximizing benefits.`,
-
   model: anthropic('claude-3-5-sonnet-20241022'),
   tools: {},
 });

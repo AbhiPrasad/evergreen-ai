@@ -5,7 +5,7 @@ import { fetchChangelogTool } from '../tools/fetch-changelog-tool';
 export const changelogSummaryAgent = new Agent({
   name: 'Changelog Summary Agent',
   description:
-    'An agent that summarizes repository changelogs and highlights important changes based on keywords and version ranges',
+    'Expert AI agent for analyzing repository changelogs and highlighting important changes based on keywords and version ranges',
   instructions: `You are a changelog analysis expert. Your role is to:
 
 1. Analyze changelog/release data from repositories

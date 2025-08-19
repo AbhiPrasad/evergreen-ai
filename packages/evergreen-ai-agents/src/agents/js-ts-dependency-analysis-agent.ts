@@ -14,8 +14,8 @@ import { packageManagerDetectorTool } from '../tools/package-manager-detector-to
  * - Modern import/export patterns
  * - Monorepo dependency management
  */
-export const dependencyAnalysisAgent = new Agent({
-  name: 'DependencyAnalysisAgent',
+export const javascriptTypeScriptDependencyAnalysisAgent = new Agent({
+  name: 'JavaScript/TypeScript Dependency Analysis Agent',
   description:
     'Expert AI agent for analyzing JavaScript/TypeScript dependency usage, patterns, and optimization opportunities',
   model: anthropic('claude-3-5-sonnet-20241022'),
