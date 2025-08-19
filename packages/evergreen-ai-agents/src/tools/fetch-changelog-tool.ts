@@ -150,24 +150,12 @@ export const fetchChangelogTool = createTool({
 
 // Helper function to parse changelog sections
 export function parseChangelogSections(content: string) {
-  const sections: Array<{
-    version?: string;
-    date?: string;
-    content: string;
-    rawContent: string;
-    prLinks: Array<{ number: string; url: string; type: 'pr' | 'issue' }>;
-  }> = [];
+  const sections: Array<ChangelogSection> = [];
 
   // Split by version headers (## [version] or ## version)
   const lines = content.split('\n');
-  let currentSection: {
-    version?: string;
-    date?: string;
-    content: string;
-    rawContent: string;
-    prLinks: Array<{ number: string; url: string; type: 'pr' | 'issue' }>;
-  } | null = null;
 
+  let currentSection: ChangelogSection | undefined;
   for (const line of lines) {
     // Check if this is a version header
     const versionMatch = line.match(/^##\s*\[?v?([^\]]+)\]?\s*(?:-\s*(.+))?/);
@@ -234,13 +222,7 @@ function extractPRAndIssueLinks(content: string): Array<{ number: string; url: s
 
 // Filter changelog sections by version range
 export function filterSectionsByVersionRange(
-  sections: Array<{
-    version?: string;
-    date?: string;
-    content: string;
-    rawContent: string;
-    prLinks: Array<{ number: string; url: string; type: 'pr' | 'issue' }>;
-  }>,
+  sections: Array<ChangelogSection>,
   fromVersion?: string,
   toVersion?: string,
 ) {

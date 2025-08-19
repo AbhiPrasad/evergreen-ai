@@ -18,6 +18,8 @@ const fileChangeSchema = z.object({
   deletions: z.number().optional().describe('Number of lines removed'),
 });
 
+export type FileChange = z.infer<typeof fileChangeSchema>;
+
 // Define the schema for diff statistics
 const diffStatsSchema = z.object({
   filesChanged: z.number().describe('Total number of files changed'),
@@ -25,6 +27,8 @@ const diffStatsSchema = z.object({
   deletions: z.number().describe('Total lines removed across all files'),
   files: z.array(fileChangeSchema).describe('Individual file changes'),
 });
+
+export type DiffStats = z.infer<typeof diffStatsSchema>;
 
 // Tool for generating git diffs
 export const gitDiffTool = createTool({
@@ -174,17 +178,12 @@ export const gitDiffTool = createTool({
 });
 
 // Helper function to parse diff statistics
-function parseDiffStats(diffOutput: string, diffType: string) {
-  const stats = {
+function parseDiffStats(diffOutput: string, diffType: string): DiffStats {
+  const stats: DiffStats = {
     filesChanged: 0,
     insertions: 0,
     deletions: 0,
-    files: [] as Array<{
-      path: string;
-      status: 'added' | 'modified' | 'deleted' | 'renamed';
-      insertions?: number;
-      deletions?: number;
-    }>,
+    files: [],
   };
 
   if (diffType === 'name-only') {
@@ -203,8 +202,7 @@ function parseDiffStats(diffOutput: string, diffType: string) {
     stats.files = lines.map(line => {
       const [statusCode, ...pathParts] = line.split('\t');
       const path = pathParts.join('\t');
-      let status: 'added' | 'modified' | 'deleted' | 'renamed' = 'modified';
-
+      let status: FileChange['status'] = 'modified';
       switch (statusCode) {
         case 'A':
           status = 'added';
@@ -219,7 +217,6 @@ function parseDiffStats(diffOutput: string, diffType: string) {
           status = 'renamed';
           break;
       }
-
       return { path, status };
     });
   } else if (diffType === 'stat') {
@@ -241,7 +238,7 @@ function parseDiffStats(diffOutput: string, diffType: string) {
       const line = lines[i];
       const match = line.match(/^\s*(.+?)\s+\|\s+(\d+)\s+([\+\-]+)/);
       if (match) {
-        const [, path, changes, indicators] = match;
+        const [, path, , indicators] = match;
         const insertions = (indicators.match(/\+/g) || []).length;
         const deletions = (indicators.match(/-/g) || []).length;
         stats.files.push({

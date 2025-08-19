@@ -57,15 +57,6 @@ const diffUrlsSchema = z.object({
   files: z.string().url().describe('Changed files page URL'),
 });
 
-const gitCommandsSchema = z.object({
-  fetchPR: z.string().describe('Command to fetch PR branch locally'),
-  checkoutPR: z.string().describe('Command to checkout PR branch'),
-  diffCommand: z.string().describe('Command to diff using git diff tool inputs'),
-  addRemote: z.string().optional().describe('Command to add remote for cross-repo PRs'),
-  fetchFromFork: z.string().optional().describe('Command to fetch from fork'),
-  diffCrossRepo: z.string().optional().describe('Command to diff cross-repo PR'),
-});
-
 const gitDiffToolConfigSchema = z.object({
   base: z.string().describe('Base reference for git diff tool'),
   compare: z.string().describe('Compare reference for git diff tool'),
@@ -76,6 +67,27 @@ const gitDiffToolConfigSchema = z.object({
     })
     .describe('Alternative config using SHAs for precision'),
 });
+
+const outputSchema = z.object({
+  prNumber: z.number().describe('Pull request number'),
+  title: z.string().describe('PR title'),
+  state: z.string().describe('PR state (open, closed, merged)'),
+  draft: z.boolean().describe('Whether the PR is a draft'),
+  merged: z.boolean().describe('Whether the PR has been merged'),
+  mergeable: z.boolean().nullable().describe('Whether the PR is mergeable'),
+  created_at: z.string().describe('PR creation timestamp'),
+  updated_at: z.string().describe('PR last update timestamp'),
+  repository: repositorySchema.describe('Base repository information'),
+  gitDiffInputs: gitDiffInputsSchema.describe('Extracted git diff inputs'),
+  author: authorSchema.describe('PR author information'),
+  stats: prStatsSchema.describe('PR statistics'),
+  labels: z.array(labelSchema).describe('PR labels'),
+  commits: z.array(commitSchema).optional().describe('Individual commits (if includeCommits=true)'),
+  diffUrls: diffUrlsSchema.optional().describe('GitHub diff URLs (if includeDiffUrls=true)'),
+  gitDiffToolConfig: gitDiffToolConfigSchema.describe('Ready-to-use config for git diff tool'),
+});
+
+export type GithubPRParserOutput = z.infer<typeof outputSchema>;
 
 // Tool for parsing GitHub PR URLs and extracting git diff inputs
 export const githubPRParserTool = createTool({
@@ -92,25 +104,7 @@ export const githubPRParserTool = createTool({
         'GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables',
       ),
   }),
-  outputSchema: z.object({
-    prNumber: z.number().describe('Pull request number'),
-    title: z.string().describe('PR title'),
-    state: z.string().describe('PR state (open, closed, merged)'),
-    draft: z.boolean().describe('Whether the PR is a draft'),
-    merged: z.boolean().describe('Whether the PR has been merged'),
-    mergeable: z.boolean().nullable().describe('Whether the PR is mergeable'),
-    created_at: z.string().describe('PR creation timestamp'),
-    updated_at: z.string().describe('PR last update timestamp'),
-    repository: repositorySchema.describe('Base repository information'),
-    gitDiffInputs: gitDiffInputsSchema.describe('Extracted git diff inputs'),
-    author: authorSchema.describe('PR author information'),
-    stats: prStatsSchema.describe('PR statistics'),
-    labels: z.array(labelSchema).describe('PR labels'),
-    commits: z.array(commitSchema).optional().describe('Individual commits (if includeCommits=true)'),
-    diffUrls: diffUrlsSchema.optional().describe('GitHub diff URLs (if includeDiffUrls=true)'),
-    gitCommands: gitCommandsSchema.describe('Helpful git commands for working with the PR'),
-    gitDiffToolConfig: gitDiffToolConfigSchema.describe('Ready-to-use config for git diff tool'),
-  }),
+  outputSchema,
   execute: async ({ context }) => {
     const { prUrl, includeCommits, includeDiffUrls, githubToken } = context;
 
@@ -140,14 +134,17 @@ export const githubPRParserTool = createTool({
       });
       const prData = prResponse.data;
 
+      // Check if this is a cross-repository PR
+      const isCrossRepository = prData.head.repo?.full_name !== prData.base.repo.full_name;
+
       // Extract essential information
-      const result: any = {
+      const result: GithubPRParserOutput = {
         // Basic PR info
         prNumber: parseInt(prNumber),
         title: prData.title,
         state: prData.state,
-        draft: prData.draft,
-        merged: prData.merged,
+        draft: prData.draft ?? false,
+        merged: prData.merged ?? false,
         mergeable: prData.mergeable,
         created_at: prData.created_at,
         updated_at: prData.updated_at,
@@ -168,7 +165,7 @@ export const githubPRParserTool = createTool({
           baseSha: prData.base.sha,
           headSha: prData.head.sha,
           // Handle cross-repository PRs (forks)
-          isCrossRepository: prData.head.repo?.full_name !== prData.base.repo.full_name,
+          isCrossRepository,
           headRepository: prData.head.repo
             ? {
                 owner: prData.head.repo.owner.login,
@@ -199,6 +196,17 @@ export const githubPRParserTool = createTool({
           color: label.color,
           description: label.description,
         })),
+
+        // Ready-to-use configuration for the git diff tool
+        gitDiffToolConfig: {
+          base: prData.base.ref,
+          compare: isCrossRepository ? `${prData.head.repo.owner.login}/${prData.head.ref}` : prData.head.ref,
+          // Use SHAs for more precise comparison
+          alternativeConfig: {
+            base: prData.base.sha,
+            compare: prData.head.sha,
+          },
+        },
       };
 
       // Include commits if requested
@@ -237,35 +245,6 @@ export const githubPRParserTool = createTool({
           files: `${prData.html_url}/files`,
         };
       }
-
-      // Add convenience properties for git operations
-      result.gitCommands = {
-        // Command to fetch PR branch locally
-        fetchPR: `git fetch origin pull/${prNumber}/head:pr-${prNumber}`,
-        // Command to checkout PR branch
-        checkoutPR: `git checkout pr-${prNumber}`,
-        // Command to diff using the git diff tool inputs
-        diffCommand: `git diff ${prData.base.ref}...${prData.head.ref}`,
-        // For cross-repo PRs
-        ...(result.gitDiffInputs.isCrossRepository && {
-          addRemote: `git remote add ${prData.head.repo.owner.login} ${prData.head.repo.clone_url}`,
-          fetchFromFork: `git fetch ${prData.head.repo.owner.login} ${prData.head.ref}`,
-          diffCrossRepo: `git diff ${prData.base.ref}...${prData.head.repo.owner.login}/${prData.head.ref}`,
-        }),
-      };
-
-      // Add a ready-to-use configuration for the git diff tool
-      result.gitDiffToolConfig = {
-        base: prData.base.ref,
-        compare: result.gitDiffInputs.isCrossRepository
-          ? `${prData.head.repo.owner.login}/${prData.head.ref}`
-          : prData.head.ref,
-        // Use SHAs for more precise comparison
-        alternativeConfig: {
-          base: prData.base.sha,
-          compare: prData.head.sha,
-        },
-      };
 
       return result;
     } catch (error: any) {
