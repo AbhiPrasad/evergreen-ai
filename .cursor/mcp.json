@@ -3,6 +3,11 @@
     "mastra": {
       "command": "npx",
       "args": ["-y", "@mastra/mcp-docs-server"]
+    },
+    "evergreen-ai": {
+      "command": "node",
+      "args": ["packages/evergreen-ai-mcp/dist/index.js"],
+      "env": {}
     }
   }
 }

@@ -28,6 +28,9 @@ export const mastra = new Mastra({
   }),
 });
 
+// @ts-expect-error - This is a global variable that is set by the MCP server
+globalThis.___MASTRA_TELEMETRY___ = false;
+
 // Export tools for direct use
 export { fetchChangelogTool, gitDiffTool, githubPRParserTool, packageManagerDetectorTool, dependencyAnalyzerTool };
 

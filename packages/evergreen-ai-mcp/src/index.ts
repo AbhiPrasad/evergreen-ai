@@ -30,20 +30,8 @@ export const mcpServer = new MCPServer({
   },
 });
 
-// Main function to start the MCP server
-export async function startMCPServer() {
-  try {
-    // Start the server using stdio transport (for CLI usage)
-    await mcpServer.startStdio();
-    console.log('MCP Server started successfully');
-  } catch (error) {
-    console.error('Failed to start MCP server:', error);
-    process.exit(1);
-  }
+export async function startServer() {
+  await mcpServer.startStdio();
 }
 
-// Start the server if this file is run directly
-// Check if this module is being run directly (ESM compatible)
-if (import.meta.url === `file://${process.argv[1]}`) {
-  startMCPServer();
-}
+startServer();
