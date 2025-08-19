@@ -4,6 +4,7 @@ import { LibSQLStore } from '@mastra/libsql';
 import { changelogSummaryAgent } from './agents/changelog-summary-agent';
 import { gitDiffSummaryAgent } from './agents/git-diff-summary-agent';
 import { dependencyAnalysisAgent } from './agents/dependency-analysis-agent';
+import { dependencyUpgradeRecommendationAgent } from './agents/dependency-upgrade-recommendation-agent';
 import { fetchChangelogTool } from './tools/fetch-changelog-tool';
 import { gitDiffTool } from './tools/git-diff-tool';
 import { githubPRParserTool } from './tools/github-pr-parser-tool';
@@ -15,6 +16,7 @@ export const mastra = new Mastra({
     changelogSummaryAgent,
     gitDiffSummaryAgent,
     dependencyAnalysisAgent,
+    dependencyUpgradeRecommendationAgent,
   },
   storage: new LibSQLStore({
     // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
@@ -31,11 +33,13 @@ export { fetchChangelogTool, gitDiffTool, githubPRParserTool, packageManagerDete
 
 // Export types from tools
 export type { FetchChangelogOutput, ChangelogSection } from './tools/fetch-changelog-tool';
+export type { FileChange, DiffStats } from './tools/git-diff-tool';
+export type { GithubPRParserOutput } from './tools/github-pr-parser-tool';
 export type { PackageManagerResult } from './tools/package-manager-detector-tool';
 export type { DependencyAnalysis, DependencyInfo, FileAnalysis, ImportUsage } from './tools/dependency-analyzer-tool';
 
 // Export agents for direct use
-export { changelogSummaryAgent, gitDiffSummaryAgent, dependencyAnalysisAgent };
+export { changelogSummaryAgent, gitDiffSummaryAgent, dependencyAnalysisAgent, dependencyUpgradeRecommendationAgent };
 
 // Export types from agents
-export type { DependencyAnalysisResult } from './agents/dependency-analysis-agent';
+// Note: dependency-upgrade-recommendation-agent currently doesn't export any types
