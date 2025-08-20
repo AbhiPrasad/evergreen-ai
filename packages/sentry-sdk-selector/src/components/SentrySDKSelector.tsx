@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './SentrySDKSelector.css';
 
 interface SDK {
@@ -39,6 +40,9 @@ const SentrySDKSelector: React.FC = () => {
   const [endVersion, setEndVersion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [changelogSummary, setChangelogSummary] = useState<string>('');
+  const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
+  const [summaryError, setSummaryError] = useState<string>('');
 
   // Fetch available SDKs on component mount
   useEffect(() => {
@@ -145,6 +149,11 @@ const SentrySDKSelector: React.FC = () => {
     setSelectedSDK(sdk.name);
     setSearchTerm(sdk.displayName);
     setIsDropdownOpen(false);
+    // Reset versions and summary when selecting a new SDK
+    setStartVersion('');
+    setEndVersion('');
+    setChangelogSummary('');
+    setSummaryError('');
   };
 
   const handleInputFocus = () => {
@@ -180,6 +189,46 @@ const SentrySDKSelector: React.FC = () => {
 
   const handleEndVersionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setEndVersion(event.target.value);
+  };
+
+  // Fetch changelog summary when both versions are selected
+  useEffect(() => {
+    if (selectedSDK && startVersion && endVersion && startVersion !== endVersion) {
+      fetchChangelogSummary();
+    } else {
+      setChangelogSummary('');
+      setSummaryError('');
+    }
+  }, [selectedSDK, startVersion, endVersion]);
+
+  const fetchChangelogSummary = async () => {
+    setSummaryLoading(true);
+    setSummaryError('');
+    setChangelogSummary('');
+
+    try {
+      console.log('Fetching changelog summary for:', { selectedSDK, startVersion, endVersion });
+      const queryParams = new URLSearchParams({
+        selectedSDK,
+        startVersion,
+        endVersion,
+      });
+
+      const response = await fetch(`/api/changelog-summary?${queryParams.toString()}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch changelog summary');
+      }
+
+      const data = await response.json();
+      setChangelogSummary(data.summary);
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : 'Failed to generate changelog summary');
+      console.error('Error fetching changelog summary:', err);
+    } finally {
+      setSummaryLoading(false);
+    }
   };
 
   if (loading && sdks.length === 0) {
@@ -222,7 +271,7 @@ const SentrySDKSelector: React.FC = () => {
                 }}
                 aria-label="Clear search"
               >
-                ×
+                X
               </button>
             )}
           </div>
@@ -307,6 +356,38 @@ const SentrySDKSelector: React.FC = () => {
           <div className="sdk-info">
             <strong>SDK:</strong> {sdks.find(sdk => sdk.name === selectedSDK)?.name || selectedSDK}
           </div>
+
+          {startVersion === endVersion ? (
+            <div className="same-version-notice">
+              <p>
+                Both versions are the same. Please select different starting and target versions to see the changelog
+                summary.
+              </p>
+            </div>
+          ) : (
+            <div className="changelog-summary">
+              <h3>Changelog Summary</h3>
+              {summaryLoading && (
+                <div className="loading">
+                  <div className="loading-spinner"></div>
+                  <span>Analyzing changelog... This may take a moment.</span>
+                </div>
+              )}
+              {summaryError && (
+                <div className="error-message">
+                  <strong>Error:</strong> {summaryError}
+                  <button onClick={fetchChangelogSummary} className="retry-button" type="button">
+                    Retry
+                  </button>
+                </div>
+              )}
+              {changelogSummary && !summaryLoading && (
+                <div className="summary-content">
+                  <ReactMarkdown className="markdown-content">{changelogSummary}</ReactMarkdown>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
