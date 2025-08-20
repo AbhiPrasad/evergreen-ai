@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { fetchChangelogTool, type FetchChangelogOutput } from './fetch-changelog-tool';
+import { fetchChangelogTool, type FetchChangelogOutput } from '../fetch-changelog-tool';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 

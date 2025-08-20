@@ -1,9 +1,9 @@
 import { Agent } from '@mastra/core/agent';
 import { anthropic } from '@ai-sdk/anthropic';
-import { goDependencyAnalyzerTool } from '../tools/go-dependency-analyzer-tool';
-import { goPackageManagerDetectorTool } from '../tools/go-package-manager-detector-tool';
-import { goPackageVersionComparisonTool } from '../tools/go-package-version-comparison-tool';
-import { goVulnerabilityScannerTool } from '../tools/go-vulnerability-scanner-tool';
+import { goDependencyAnalyzerTool } from '../tools/go/go-dependency-analyzer-tool';
+import { goPackageManagerDetectorTool } from '../tools/go/go-package-manager-detector-tool';
+import { goPackageVersionComparisonTool } from '../tools/go/go-package-version-comparison-tool';
+import { goVulnerabilityScannerTool } from '../tools/go/go-vulnerability-scanner-tool';
 import { fetchChangelogTool } from '../tools/fetch-changelog-tool';
 
 /**

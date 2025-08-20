@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core/agent';
 import { anthropic } from '@ai-sdk/anthropic';
-import { javascriptTypeScriptDependencyAnalysisTool } from '../tools/js-ts-dependency-analyzer-tool';
-import { packageManagerDetectorTool } from '../tools/package-manager-detector-tool';
-import { packageVersionComparisonTool } from '../tools/package-version-comparison-tool';
+import { javascriptTypeScriptDependencyAnalysisTool } from '../tools/javascript-typescript/js-ts-dependency-analyzer-tool';
+import { packageManagerDetectorTool } from '../tools/javascript-typescript/package-manager-detector-tool';
+import { packageVersionComparisonTool } from '../tools/javascript-typescript/package-version-comparison-tool';
 import { fetchChangelogTool } from '../tools/fetch-changelog-tool';
 
 /**

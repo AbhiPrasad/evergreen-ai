@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { fetchChangelogTool, type FetchChangelogOutput } from './fetch-changelog-tool';
+import { fetchChangelogTool, type FetchChangelogOutput } from '../fetch-changelog-tool';
 
 // Schema for Python version comparison results
 const pythonVersionComparisonSchema = z.object({
