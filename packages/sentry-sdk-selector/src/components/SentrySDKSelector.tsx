@@ -242,154 +242,179 @@ const SentrySDKSelector: React.FC = () => {
   return (
     <div className="sdk-selector">
       {error && <div className="error-message">{error}</div>}
+      
+      <div className="main-layout">
+        <div className="left-panel">
+          <div className="selectors-container">
+            <div className="form-group">
+              <label htmlFor="sdk-search">Select Sentry SDK:</label>
+              <div className="input-dropdown">
+                <div className="input-wrapper">
+                  <input
+                    id="sdk-search"
+                    type="text"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Search for an SDK..."
+                    className="form-input"
+                    autoComplete="off"
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      className="clear-button"
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        setSearchTerm('');
+                        setSelectedSDK('');
+                        setIsDropdownOpen(false);
+                      }}
+                      aria-label="Clear search"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {isDropdownOpen && (
+                  <div className="dropdown-list">
+                    {filteredSDKs.length > 0 ? (
+                      filteredSDKs.map((sdk, index) => (
+                        <div
+                          key={sdk.name}
+                          className={`dropdown-item ${index === highlightedIndex ? 'highlighted' : ''}`}
+                          onMouseDown={() => handleSDKSelect(sdk)}
+                          onMouseEnter={() => setHighlightedIndex(index)}
+                        >
+                          <div className="sdk-name">{sdk.displayName}</div>
+                          <div className="sdk-key">{sdk.name}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="dropdown-item no-results">No SDKs found matching "{searchTerm}"</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
 
-      <div className="form-group">
-        <label htmlFor="sdk-search">Select Sentry SDK:</label>
-        <div className="input-dropdown">
-          <div className="input-wrapper">
-            <input
-              id="sdk-search"
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              onKeyDown={handleKeyDown}
-              placeholder="Search for an SDK..."
-              className="form-input"
-              autoComplete="off"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                className="clear-button"
-                onMouseDown={e => {
-                  e.preventDefault();
-                  setSearchTerm('');
-                  setSelectedSDK('');
-                  setIsDropdownOpen(false);
-                }}
-                aria-label="Clear search"
-              >
-                X
-              </button>
+            {selectedSDK && (
+              <div className="version-selectors">
+                <div className="form-group">
+                  <label htmlFor="start-version">Starting Version:</label>
+                  <select
+                    id="start-version"
+                    value={startVersion}
+                    onChange={handleStartVersionChange}
+                    className="form-select"
+                    disabled={loading}
+                  >
+                    <option value="">Select starting version...</option>
+                    {versions.map(version => (
+                      <option key={version} value={version}>
+                        {version}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="end-version">Target Version:</label>
+                  <select
+                    id="end-version"
+                    value={endVersion}
+                    onChange={handleEndVersionChange}
+                    className="form-select"
+                    disabled={loading}
+                  >
+                    <option value="">Select target version...</option>
+                    {versions.map(version => (
+                      <option key={version} value={version}>
+                        {version}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {loading && selectedSDK && <div className="loading">Loading versions...</div>}
+
+            {startVersion && endVersion && (
+              <div className="comparison-info">
+                <h3>Version Comparison</h3>
+                <div className="version-info">
+                  <div className="version-card">
+                    <h4>Starting Version</h4>
+                    <span className="version-number">{startVersion}</span>
+                  </div>
+                  <div className="arrow">→</div>
+                  <div className="version-card">
+                    <h4>Target Version</h4>
+                    <span className="version-number">{endVersion}</span>
+                  </div>
+                </div>
+                <div className="sdk-info">
+                  <strong>SDK:</strong> {sdks.find(sdk => sdk.name === selectedSDK)?.displayName || selectedSDK}
+                </div>
+              </div>
             )}
           </div>
-          {isDropdownOpen && (
-            <div className="dropdown-list">
-              {filteredSDKs.length > 0 ? (
-                filteredSDKs.map((sdk, index) => (
-                  <div
-                    key={sdk.name}
-                    className={`dropdown-item ${index === highlightedIndex ? 'highlighted' : ''}`}
-                    onMouseDown={() => handleSDKSelect(sdk)}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                  >
-                    <div className="sdk-name">{sdk.displayName}</div>
-                    <div className="sdk-key">{sdk.name}</div>
-                  </div>
-                ))
+        </div>
+
+        <div className="right-panel">
+          {startVersion && endVersion && (
+            <>
+              {startVersion === endVersion ? (
+                <div className="same-version-notice">
+                  <p>Both versions are the same. Please select different starting and target versions to see the changelog summary.</p>
+                </div>
               ) : (
-                <div className="dropdown-item no-results">No SDKs found matching "{searchTerm}"</div>
+                <div className="changelog-summary">
+                  <h3>Changelog Summary</h3>
+                  {summaryLoading && (
+                    <div className="loading">
+                      <div className="loading-spinner"></div>
+                      <span>Analyzing changelog... This may take a moment.</span>
+                    </div>
+                  )}
+                  {summaryError && (
+                    <div className="error-message">
+                      <strong>Error:</strong> {summaryError}
+                      <button 
+                        onClick={fetchChangelogSummary}
+                        className="retry-button"
+                        type="button"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                  {changelogSummary && !summaryLoading && (
+                    <div className="summary-content">
+                      <ReactMarkdown className="markdown-content">
+                        {changelogSummary}
+                      </ReactMarkdown>
+                    </div>
+                  )}
+                </div>
               )}
+            </>
+          )}
+          {(!startVersion || !endVersion) && selectedSDK && (
+            <div className="empty-state">
+              <p>Select starting and target versions to see the changelog summary.</p>
+            </div>
+          )}
+          {!selectedSDK && (
+            <div className="empty-state">
+              <p>Select a Sentry SDK to get started.</p>
             </div>
           )}
         </div>
       </div>
-
-      {selectedSDK && (
-        <div className="version-selectors">
-          <div className="form-group">
-            <label htmlFor="start-version">Starting Version:</label>
-            <select
-              id="start-version"
-              value={startVersion}
-              onChange={handleStartVersionChange}
-              className="form-select"
-              disabled={loading}
-            >
-              <option value="">Select starting version...</option>
-              {versions.map(version => (
-                <option key={version} value={version}>
-                  {version}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="end-version">Target Version:</label>
-            <select
-              id="end-version"
-              value={endVersion}
-              onChange={handleEndVersionChange}
-              className="form-select"
-              disabled={loading}
-            >
-              <option value="">Select target version...</option>
-              {versions.map(version => (
-                <option key={version} value={version}>
-                  {version}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
-      {loading && selectedSDK && <div className="loading">Loading versions...</div>}
-
-      {startVersion && endVersion && (
-        <div className="comparison-result">
-          <h3>Version Comparison</h3>
-          <div className="version-info">
-            <div className="version-card">
-              <h4>Starting Version</h4>
-              <span className="version-number">{startVersion}</span>
-            </div>
-            <div className="arrow">→</div>
-            <div className="version-card">
-              <h4>Target Version</h4>
-              <span className="version-number">{endVersion}</span>
-            </div>
-          </div>
-          <div className="sdk-info">
-            <strong>SDK:</strong> {sdks.find(sdk => sdk.name === selectedSDK)?.name || selectedSDK}
-          </div>
-
-          {startVersion === endVersion ? (
-            <div className="same-version-notice">
-              <p>
-                Both versions are the same. Please select different starting and target versions to see the changelog
-                summary.
-              </p>
-            </div>
-          ) : (
-            <div className="changelog-summary">
-              <h3>Changelog Summary</h3>
-              {summaryLoading && (
-                <div className="loading">
-                  <div className="loading-spinner"></div>
-                  <span>Analyzing changelog... This may take a moment.</span>
-                </div>
-              )}
-              {summaryError && (
-                <div className="error-message">
-                  <strong>Error:</strong> {summaryError}
-                  <button onClick={fetchChangelogSummary} className="retry-button" type="button">
-                    Retry
-                  </button>
-                </div>
-              )}
-              {changelogSummary && !summaryLoading && (
-                <div className="summary-content">
-                  <ReactMarkdown className="markdown-content">{changelogSummary}</ReactMarkdown>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

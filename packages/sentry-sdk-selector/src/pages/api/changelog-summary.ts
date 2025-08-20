@@ -44,15 +44,9 @@ export const GET: APIRoute = async ({ request }) => {
     const prompt = `Analyze the changelog for ${selectedSDK} from version ${startVersion} to ${endVersion}. 
     Repository URL: ${selectedSDKData.repo_url}
     
-    Please provide a comprehensive summary of the changes, focusing on:
-    - Breaking changes
-    - New features
-    - Bug fixes
-    - Performance improvements
-    - Security updates
-    - Dependencies updates
+    Please provide a comprehensive summary of the changes, focusing on ${selectedSDK} specific changes.
     
-    Make sure to include version numbers and any important migration notes.`;
+    Make sure to include version numbers and any important migration notes. Do not ask any follow up questions. Do not make comments about the quality of the changelog.`;
 
     // Call the changelog summary agent
     const result = await changelogSummaryAgent.generate(prompt);

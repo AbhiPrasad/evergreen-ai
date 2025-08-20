@@ -6,49 +6,67 @@ import SentrySDKSelector from '../components/SentrySDKSelector';
 <Layout title="Sentry SDK Changelog Summary">
   <main>
     <div class="container">
-      <h1>Sentry SDK Changelog Summary</h1>
-      <p>
-        Select a Sentry SDK, select a starting version, and select an ending version to get a summary of the changes.
-      </p>
-      <SentrySDKSelector client:load />
+      <div class="header">
+        <h1>Sentry SDK Changelog Summary</h1>
+        <p>
+          Select a Sentry SDK and version range to get an AI-powered summary of the changes.
+        </p>
+      </div>
+      <div class="app-content">
+        <SentrySDKSelector client:load />
+      </div>
     </div>
   </main>
 </Layout>
 
 <style>
+  :global(html, body) {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
   main {
-    margin: auto;
-    padding: 1rem;
-    width: 800px;
-    max-width: calc(100% - 2rem);
+    height: 100vh;
+    width: 100%;
     color: white;
-    font-size: 20px;
+    font-size: 16px;
     line-height: 1.6;
+    position: relative;
   }
 
   .container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #1a0d2e 0%, #2d1b4e 100%);
     padding: 2rem;
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    text-align: center;
+    border-bottom: 1px solid #563d7c;
   }
 
   h1 {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    text-align: center;
-    background: linear-gradient(45deg, #fff, #e0e7ff);
+    background: linear-gradient(45deg, #dfb0ef, #c396d8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   p {
-    text-align: center;
-    margin-bottom: 2rem;
+    margin: 0;
     opacity: 0.9;
+    color: #c396d8;
+  }
+
+  .app-content {
+    flex: 1;
+    overflow: hidden;
   }
 </style>
