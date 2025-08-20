@@ -2,14 +2,13 @@
 
 import { MCPServer } from '@mastra/mcp';
 import {
-  dependencyUpgradeRecommendationAgent,
-  githubPRParserTool,
-  gitDiffTool,
-  fetchChangelogTool,
-  javascriptTypeScriptDependencyAnalysisTool,
   changelogSummaryAgent,
   gitDiffSummaryAgent,
   javascriptTypeScriptDependencyAnalysisAgent,
+  javaDependencyAnalysisAgent,
+  pythonDependencyAnalysisAgent,
+  rubyDependencyAnalysisAgent,
+  goDependencyAnalysisAgent,
 } from '@sentry/evergreen-ai-agents';
 
 // Create MCP Server with all available tools and agents
@@ -40,6 +39,9 @@ Before evaluating the dependency upgrade, you should ask the user to call the fo
 - ask_changelogSummary (Grabs the summary of the changelog of the dependency you are upgrading, you need to give it the versions you are interested in)
 - ask_gitDiffSummary (Generates a summary of the git diff for a branch or between two commits/branches. Use this if the changelog doesn't give you enough information about the changes.)
 - ask_javascriptTypeScriptDependencyAnalysis (Analyzes JavaScript/TypeScript code to identify how dependencies are used, their criticality, and provides recommendations)
+- ask_goDependencyAnalysis (Analyzes Go code to identify how dependencies are used, their criticality, and provides recommendations)
+- ask_pythonDependencyAnalysis (Analyzes Python code to identify how dependencies are used, their criticality, and provides recommendations)
+- ask_rubyDependencyAnalysis (Analyzes Ruby code to identify how dependencies are used, their criticality, and provides recommendations)
 
 ## Your Expertise Areas:
 
@@ -116,17 +118,15 @@ If the confidence level is high, you should proceed with upgrading the dependenc
       return [];
     },
   },
-  tools: {
-    // githubPRParserTool,
-    // gitDiffTool,
-    // fetchChangelogTool,
-    // javascriptTypeScriptDependencyAnalysisTool,
-  },
+  tools: {},
   agents: {
-    // dependencyUpgrade: dependencyUpgradeRecommendationAgent,
     changelogSummary: changelogSummaryAgent,
     gitDiffSummary: gitDiffSummaryAgent,
     javascriptTypeScriptDependencyAnalysis: javascriptTypeScriptDependencyAnalysisAgent,
+    javaDependencyAnalysis: javaDependencyAnalysisAgent,
+    goDependencyAnalysis: goDependencyAnalysisAgent,
+    pythonDependencyAnalysis: pythonDependencyAnalysisAgent,
+    rubyDependencyAnalysis: rubyDependencyAnalysisAgent,
   },
 });
 

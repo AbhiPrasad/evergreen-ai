@@ -22,6 +22,9 @@ import {
   type GradleAnalysis,
   type SbtAnalysis,
 } from './tools/java';
+import { goDependencyAnalysisAgent } from './agents/go-dependency-analysis-agent';
+import { pythonDependencyAnalysisAgent } from './agents/python-dependency-analysis-agent';
+import { rubyDependencyAnalysisAgent } from './agents/ruby-dependency-analysis-agent';
 
 export const mastra = new Mastra({
   agents: {
@@ -29,6 +32,9 @@ export const mastra = new Mastra({
     gitDiffSummaryAgent,
     javascriptTypeScriptDependencyAnalysisAgent,
     javaDependencyAnalysisAgent,
+    goDependencyAnalysisAgent,
+    pythonDependencyAnalysisAgent,
+    rubyDependencyAnalysisAgent,
     dependencyUpgradeRecommendationAgent,
   },
   storage: new LibSQLStore({
@@ -70,12 +76,7 @@ export type {
   ImportUsage,
 } from './tools/javascript-typescript/js-ts-dependency-analyzer-tool';
 export type { PackageVersionComparison } from './tools/javascript-typescript/package-version-comparison-tool';
-export type {
-  JavaBuildToolResult,
-  MavenAnalysis,
-  GradleAnalysis,
-  SbtAnalysis,
-} from './tools/java';
+export type { JavaBuildToolResult, MavenAnalysis, GradleAnalysis, SbtAnalysis } from './tools/java';
 
 // Export agents for direct use
 export {
@@ -83,6 +84,9 @@ export {
   gitDiffSummaryAgent,
   javascriptTypeScriptDependencyAnalysisAgent,
   javaDependencyAnalysisAgent,
+  goDependencyAnalysisAgent,
+  pythonDependencyAnalysisAgent,
+  rubyDependencyAnalysisAgent,
   dependencyUpgradeRecommendationAgent,
 };
 

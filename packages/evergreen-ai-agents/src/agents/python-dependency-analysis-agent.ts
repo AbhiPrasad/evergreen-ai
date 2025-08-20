@@ -1,8 +1,8 @@
 import { Agent } from '@mastra/core/agent';
 import { anthropic } from '@ai-sdk/anthropic';
-import { pythonDependencyAnalysisTool } from '../tools/python-dependency-analyzer-tool';
-import { pythonPackageManagerDetectorTool } from '../tools/python-package-manager-detector-tool';
-import { pythonPackageVersionComparisonTool } from '../tools/python-package-version-comparison-tool';
+import { pythonDependencyAnalysisTool } from '../tools/python/python-dependency-analyzer-tool';
+import { pythonPackageManagerDetectorTool } from '../tools/python/python-package-manager-detector-tool';
+import { pythonPackageVersionComparisonTool } from '../tools/python/python-package-version-comparison-tool';
 import { fetchChangelogTool } from '../tools/fetch-changelog-tool';
 
 /**
