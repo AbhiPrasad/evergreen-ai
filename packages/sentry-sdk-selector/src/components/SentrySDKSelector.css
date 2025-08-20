@@ -18,8 +18,8 @@
 }
 
 .sdk-selector {
-  max-width: none;
-  margin: 0;
+  max-width: 1600px;
+  margin: 0 auto;
   height: 100vh;
   color: white;
 }
@@ -113,7 +113,7 @@
 }
 
 .input-wrapper .form-input {
-  padding-right: 3rem;
+  padding-right: 0.5rem;
 }
 
 /* Input Dropdown Styles */
@@ -335,6 +335,7 @@
 
 /* Changelog Summary Styles */
 .changelog-summary {
+  padding-bottom: 12rem;
   flex: 1;
   display: flex;
   flex-direction: column;
