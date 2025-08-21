@@ -12,7 +12,6 @@ import { getDependencyAnalysisAgent } from '../services/agent-selector.js';
 export async function analyzePR(req: Request, res: Response) {
   try {
     const prUrl = req.query.prUrl as string;
-    console.log('PR URL is required', prUrl);
 
     if (!prUrl) {
       return res.status(400).json({ error: 'PR URL is required' });
