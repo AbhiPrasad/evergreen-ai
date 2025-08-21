@@ -13,6 +13,7 @@
   "dependencies": {
     "@astrojs/node": "^9.4.2",
     "@astrojs/react": "^4.3.0",
+    "@sentry/evergreen-ai-agents": "0.0.1",
     "@types/react": "^19.1.7",
     "@types/react-dom": "^19.1.7",
     "astro": "^5.13.2",

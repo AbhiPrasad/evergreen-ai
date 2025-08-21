@@ -1,20 +1,25 @@
-import { Request, Response } from 'express';
+import type { APIRoute } from 'astro';
 import {
   githubPRAnalyzerAgent,
   gitDiffSummaryAgent,
   changelogSummaryAgent,
   dependencyUpgradeRecommendationAgent,
 } from '@sentry/evergreen-ai-agents';
-import { AnalysisStep, DependencyInfo } from '../types.js';
-import { detectDependencyUpgrade } from '../services/dependency-detector.js';
-import { getDependencyAnalysisAgent } from '../services/agent-selector.js';
+import type { AnalysisStep } from '../../lib/types.js';
+import { detectDependencyUpgrade } from '../../lib/dependency-detector.js';
+import { getDependencyAnalysisAgent } from '../../lib/agent-selector.js';
 
-export async function analyzePR(req: Request, res: Response) {
+export const GET: APIRoute = async ({ url }) => {
   try {
-    const prUrl = req.query.prUrl as string;
+    const prUrl = url.searchParams.get('prUrl');
 
     if (!prUrl) {
-      return res.status(400).json({ error: 'PR URL is required' });
+      return new Response(JSON.stringify({ error: 'PR URL is required' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
 
     const steps: AnalysisStep[] = [
@@ -57,7 +62,12 @@ export async function analyzePR(req: Request, res: Response) {
     } catch (error) {
       steps[0].status = 'error';
       steps[0].error = error instanceof Error ? error.message : 'Unknown error';
-      return res.status(400).json({ error: steps[0].error, steps });
+      return new Response(JSON.stringify({ error: steps[0].error, steps }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
 
     const prData = steps[0].result;
@@ -69,11 +79,19 @@ export async function analyzePR(req: Request, res: Response) {
     steps[1].result = dependencyInfo;
 
     if (!dependencyInfo.isDependencyUpgrade) {
-      return res.status(200).json({
-        error: 'This PR does not appear to be a dependency upgrade',
-        steps,
-        dependencyInfo,
-      });
+      return new Response(
+        JSON.stringify({
+          error: 'This PR does not appear to be a dependency upgrade',
+          steps,
+          dependencyInfo,
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
     }
 
     // Steps 3-6: Run parallel analysis
@@ -242,16 +260,32 @@ Please provide a comprehensive recommendation covering:
       steps[6].error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    return res.status(200).json({
-      success: true,
-      steps,
-      dependencyInfo,
-      recommendation: steps[6].result,
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        steps,
+        dependencyInfo,
+        recommendation: steps[6].result,
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   } catch (error) {
     console.error('Error in analyze-pr', error);
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   }
-}
+};

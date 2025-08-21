@@ -1,4 +1,4 @@
-import { DependencyInfo } from '../types.js';
+import type { DependencyInfo } from './types.js';
 
 export function detectDependencyUpgrade(prData: any): DependencyInfo {
   const title = prData.title.toLowerCase();
