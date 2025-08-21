@@ -1,84 +1,66 @@
 # GitHub PR Dependency Review
 
-An AI-powered tool for analyzing GitHub Pull Requests to identify dependency upgrades and provide comprehensive recommendations.
+An AI-powered Astro application that analyzes dependency upgrades in GitHub Pull Requests using a sophisticated multi-agent AI system.
 
 ## Features
 
-This package analyzes GitHub PRs to:
+### 🤖 Multi-Agent AI Architecture
+This application uses a sophisticated AI agent system that runs analysis in parallel for maximum efficiency:
 
-1. **Parse GitHub PRs** using the `github-pr-parser` tool to extract comprehensive PR information
-2. **Detect Dependency Upgrades** and identify the programming language ecosystem (JavaScript, Java, Go, Python, Ruby)
-3. **Stop Analysis** if the PR is not a dependency upgrade
-4. **Parallel Analysis** when a dependency upgrade is detected:
-   - **Git Diff Analysis** - Analyzes what dependencies are being upgraded and their impact
-   - **Changelog Summary** - Summarizes what changed in the dependency via its changelog
-   - **Ecosystem-Specific Analysis** - Runs specialized analysis based on the detected ecosystem
-5. **Generate Recommendations** using all gathered information to provide actionable advice
+1. **GitHub PR Analyzer Agent**: Parses PR URLs and extracts comprehensive metadata
+2. **Git Diff Summary Agent**: Analyzes code changes and their impact
+3. **Changelog Summary Agent**: Fetches and summarizes dependency changelogs
+4. **Ecosystem-Specific Agents**: Specialized analysis for different programming languages
+5. **Dependency Upgrade Recommendation Agent**: Generates final recommendations
 
-## Workflow
+### 🔍 Analysis Pipeline
+- **GitHub PR Parsing**: Extracts PR information, branch details, statistics, and metadata
+- **Dependency Detection**: Uses NLP to identify dependency upgrades and determine ecosystems
+- **Parallel Analysis**: Runs multiple AI agents simultaneously for faster results
+- **Smart Recommendations**: Comprehensive upgrade recommendations with risk assessment
 
-The analysis follows this workflow:
-
-1. **PR Parsing** - Uses `githubPRAnalyzerAgent` to parse the GitHub PR link
-2. **Dependency Detection** - Analyzes PR title, labels, and content to determine if it's a dependency upgrade
-3. **Ecosystem Identification** - Identifies the programming language ecosystem (JS/TS, Java, Go, Python, Ruby)
-4. **Early Exit** - If not a dependency upgrade, stops the analysis
-5. **Parallel Analysis** (Steps 4-7 from requirements):
-   - `gitDiffSummaryAgent` - Analyzes the git diff to understand what changed
-   - `changelogSummaryAgent` - Summarizes dependency changelogs
-   - Ecosystem-specific dependency analysis agent (e.g., `javascriptTypeScriptDependencyAnalysisAgent`)
-6. **Recommendation Generation** - `dependencyUpgradeRecommendationAgent` provides final recommendations
+### 🎯 Real-time Progress Tracking
+- Live progress indicators for each analysis step
+- Error handling and recovery for individual analysis components
+- Detailed step-by-step results display
 
 ## Supported Ecosystems
 
-- **JavaScript/TypeScript** - package.json, yarn.lock, package-lock.json
-- **Java** - Maven (pom.xml), Gradle (build.gradle), SBT
-- **Go** - go.mod
-- **Python** - requirements.txt, poetry.lock, Pipfile
-- **Ruby** - Gemfile, bundle
+- 📦 JavaScript/TypeScript (npm, yarn)
+- ☕ Java (Maven, Gradle)
+- 🐹 Go (go.mod)
+- 🐍 Python (pip, requirements.txt)
+- 💎 Ruby (Bundler, Gemfile)
 
 ## Usage
 
 1. Enter a GitHub PR URL (e.g., `https://github.com/owner/repo/pull/123`)
-2. Click "Analyze PR"
-3. The tool will:
-   - Parse the PR details
-   - Determine if it's a dependency upgrade
-   - If yes, run comprehensive analysis
-   - Provide AI-powered recommendations
+2. Click "Analyze" to start the AI-powered analysis
+3. View real-time progress of analysis steps
+4. Get comprehensive recommendations and insights
 
-## API Endpoints
+## Quick Start
 
-### POST `/api/analyze-pr`
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-Analyzes a GitHub PR for dependency upgrades.
+2. **Set up environment variables** (optional for public repos):
+   ```bash
+   export GITHUB_TOKEN=your_github_token_here
+   ```
 
-**Request Body:**
-```json
-{
-  "prUrl": "https://github.com/owner/repo/pull/123"
-}
-```
+3. **Start development server**:
+   ```bash
+   npm run dev
+   ```
 
-**Response:**
-```json
-{
-  "isDependencyUpgrade": boolean,
-  "ecosystem": "javascript" | "java" | "go" | "python" | "ruby",
-  "prAnalysis": { /* PR details */ },
-  "gitDiffSummary": "AI analysis of git diff",
-  "changelogSummary": "AI summary of dependency changes", 
-  "dependencyAnalysis": "Ecosystem-specific analysis",
-  "recommendation": "AI-powered upgrade recommendation"
-}
-```
+4. **Open your browser** to `http://localhost:4322`
 
-## Dependencies
-
-- `@sentry/evergreen-ai-agents` - AI agents for analysis
-- `react-markdown` - Markdown rendering for AI responses
-- `clsx` - Conditional CSS classes
-- `next` - React framework
+5. **Test with a PR URL** like:
+   - `https://github.com/facebook/react/pull/30000`
+   - `https://github.com/microsoft/vscode/pull/20000`
 
 ## Development
 
@@ -86,19 +68,71 @@ Analyzes a GitHub PR for dependency upgrades.
 # Install dependencies
 npm install
 
-# Run development server
+# Start development server
 npm run dev
 
 # Build for production
 npm run build
+
+# Preview production build
+npm run preview
+
+# Test agent functionality
+npm run test-agent
+
+# Clean build artifacts
+npm run clean
 ```
+
+## Architecture
+
+### Technology Stack
+- **Frontend**: Astro + React + TypeScript
+- **Backend**: Astro Server-Side Rendering with API routes
+- **AI**: Multi-agent system using Mastra framework with Claude 3.5 Sonnet
+- **Styling**: CSS with modern gradients and responsive design
+
+### Agent Workflow
+```
+1. GitHub PR URL Input
+2. │
+3. ├─ GitHub PR Analyzer Agent (parses PR metadata)
+4. │
+5. ├─ Dependency Detection (NLP-based classification)
+6. │
+7. ├─ Parallel Analysis:
+8. │   ├─ Git Diff Summary Agent
+9. │   ├─ Changelog Summary Agent  
+10. │   ├─ Dependency-focused Diff Analysis
+11. │   └─ Ecosystem-Specific Analysis
+12. │
+13. └─ Dependency Upgrade Recommendation Agent
+14.     │
+15.     └─ Final Recommendation Output
+16. ```
 
 ## Environment Variables
 
-The GitHub PR parser may require authentication for private repositories:
+- `GITHUB_TOKEN` or `GH_TOKEN` or `GITHUB_ACCESS_TOKEN`: GitHub personal access token for API access (optional for public repos)
+- `ANTHROPIC_API_KEY`: Required for AI analysis (automatically used by Mastra agents)
 
-- `GITHUB_TOKEN`
-- `GH_TOKEN` 
-- `GITHUB_ACCESS_TOKEN`
+## API Endpoints
 
-Any of these environment variables can be used to provide GitHub API access.
+- `POST /api/analyze-pr`: Analyzes a GitHub PR for dependency upgrades
+
+### Request Body
+```json
+{
+  "prUrl": "https://github.com/owner/repo/pull/123"
+}
+```
+
+### Response
+```json
+{
+  "success": true,
+  "steps": [...],
+  "dependencyInfo": {...},
+  "recommendation": "..."
+}
+```

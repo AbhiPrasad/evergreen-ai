@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import './PRDependencyReview.css';
 
 interface AnalysisStep {
@@ -225,17 +224,7 @@ const PRDependencyReview: React.FC = () => {
           {analysis?.recommendation && (
             <div className="recommendation-section">
               <h3>🎯 Dependency Upgrade Recommendation</h3>
-              <div className="recommendation-content">
-                <ReactMarkdown
-                  components={{
-                    p: ({ children }) => <p className="markdown-content">{children}</p>,
-                  }}
-                >
-                  {typeof analysis.recommendation === 'string'
-                    ? analysis.recommendation
-                    : JSON.stringify(analysis.recommendation, null, 2)}
-                </ReactMarkdown>
-              </div>
+              <div className="recommendation-content">{analysis.recommendation}</div>
             </div>
           )}
 

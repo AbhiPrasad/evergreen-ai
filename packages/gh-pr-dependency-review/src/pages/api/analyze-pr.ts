@@ -10,7 +10,6 @@ import {
   pythonDependencyAnalysisAgent,
   rubyDependencyAnalysisAgent,
 } from '@sentry/evergreen-ai-agents';
-// import type { GithubPRParserOutput } from '@sentry/evergreen-ai-agents';
 
 interface AnalysisStep {
   id: string;

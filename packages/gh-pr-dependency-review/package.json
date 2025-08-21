@@ -1,28 +1,27 @@
 {
   "name": "gh-pr-dependency-review",
-  "version": "0.1.0",
-  "private": true,
+  "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "next": "15.5.0",
+    "@astrojs/node": "^9.4.2",
+    "@astrojs/react": "^4.3.0",
     "@sentry/evergreen-ai-agents": "0.0.1",
-    "react-markdown": "^10.1.0",
-    "clsx": "^2.1.1"
+    "@types/react": "^19.1.7",
+    "@types/react-dom": "^19.1.7",
+    "astro": "^5.13.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "typescript": "^5",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.0",
-    "@eslint/eslintrc": "^3"
+    "@astrojs/check": "^0.9.3",
+    "typescript": "^5.5.4"
   }
 }
