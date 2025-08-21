@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import * as Sentry from '@sentry/astro';
 import {
   githubPRAnalyzerAgent,
   gitDiffSummaryAgent,
@@ -151,15 +152,16 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // Steps 3-6: Run parallel analysis
-    const analysisPromises: Promise<void>[] = [];
+    await Sentry.startSpan({ name: 'parallel-analysis', forceTransaction: true }, async () => {
+      // Steps 3-6: Run parallel analysis
+      const analysisPromises: Promise<void>[] = [];
 
-    // Step 3: Git diff summary
-    analysisPromises.push(
-      (async () => {
-        steps[2].status = 'running';
-        try {
-          const prompt = `Analyze the git diff for PR #${prData.prNumber}: "${prData.title}"
+      // Step 3: Git diff summary
+      analysisPromises.push(
+        (async () => {
+          steps[2].status = 'running';
+          try {
+            const prompt = `Analyze the git diff for PR #${prData.prNumber}: "${prData.title}"
         
         Repository: ${prData.repository.fullName}
         Base branch: ${prData.gitDiffInputs.base}
@@ -167,28 +169,28 @@ export const GET: APIRoute = async ({ url }) => {
         
         Please provide a comprehensive analysis of the changes focusing on dependency upgrades and their impact.`;
 
-          const gitDiffResult = await gitDiffSummaryAgent.generate(prompt);
-          steps[2].status = 'completed';
-          steps[2].result = gitDiffResult.text;
-        } catch (error) {
-          steps[2].status = 'error';
-          steps[2].error = error instanceof Error ? error.message : 'Unknown error';
-        }
-      })(),
-    );
+            const gitDiffResult = await gitDiffSummaryAgent.generate(prompt);
+            steps[2].status = 'completed';
+            steps[2].result = gitDiffResult.text;
+          } catch (error) {
+            steps[2].status = 'error';
+            steps[2].error = error instanceof Error ? error.message : 'Unknown error';
+          }
+        })(),
+      );
 
-    // Step 4: Changelog summary
-    analysisPromises.push(
-      (async () => {
-        if (!dependencyInfo.dependencyName) {
-          steps[3].status = 'error';
-          steps[3].error = 'Cannot fetch changelog without dependency name';
-          return;
-        }
+      // Step 4: Changelog summary
+      analysisPromises.push(
+        (async () => {
+          if (!dependencyInfo.dependencyName) {
+            steps[3].status = 'error';
+            steps[3].error = 'Cannot fetch changelog without dependency name';
+            return;
+          }
 
-        steps[3].status = 'running';
-        try {
-          const prompt = `Analyze the changelog for ${dependencyInfo.dependencyName} from version ${dependencyInfo.oldVersion || 'unknown'} to ${dependencyInfo.newVersion || 'latest'}.
+          steps[3].status = 'running';
+          try {
+            const prompt = `Analyze the changelog for ${dependencyInfo.dependencyName} from version ${dependencyInfo.oldVersion || 'unknown'} to ${dependencyInfo.newVersion || 'latest'}.
         
         Ecosystem: ${dependencyInfo.ecosystem || 'unknown'}
         
@@ -201,51 +203,51 @@ export const GET: APIRoute = async ({ url }) => {
         
         Include all relevant version information and migration notes.`;
 
-          const changelogResult = await changelogSummaryAgent.generate(prompt);
-          steps[3].status = 'completed';
-          steps[3].result = changelogResult.text;
-        } catch (error) {
-          steps[3].status = 'error';
-          steps[3].error = error instanceof Error ? error.message : 'Unknown error';
-        }
-      })(),
-    );
+            const changelogResult = await changelogSummaryAgent.generate(prompt);
+            steps[3].status = 'completed';
+            steps[3].result = changelogResult.text;
+          } catch (error) {
+            steps[3].status = 'error';
+            steps[3].error = error instanceof Error ? error.message : 'Unknown error';
+          }
+        })(),
+      );
 
-    // Step 5: Dependency diff analysis (using git diff again but focused on dependency)
-    analysisPromises.push(
-      (async () => {
-        steps[4].status = 'running';
-        try {
-          const prompt = `Analyze the git diff specifically for dependency changes in PR #${prData.prNumber}: "${prData.title}"
+      // Step 5: Dependency diff analysis (using git diff again but focused on dependency)
+      analysisPromises.push(
+        (async () => {
+          steps[4].status = 'running';
+          try {
+            const prompt = `Analyze the git diff specifically for dependency changes in PR #${prData.prNumber}: "${prData.title}"
         
         Repository: ${prData.repository.fullName}
         Focus on: ${dependencyInfo.dependencyName} upgrade from ${dependencyInfo.oldVersion} to ${dependencyInfo.newVersion}
         
         Please analyze the specific dependency-related file changes and their impact on the codebase.`;
 
-          const dependencyDiffResult = await gitDiffSummaryAgent.generate(prompt);
-          steps[4].status = 'completed';
-          steps[4].result = dependencyDiffResult.text;
-        } catch (error) {
-          steps[4].status = 'error';
-          steps[4].error = error instanceof Error ? error.message : 'Unknown error';
-        }
-      })(),
-    );
+            const dependencyDiffResult = await gitDiffSummaryAgent.generate(prompt);
+            steps[4].status = 'completed';
+            steps[4].result = dependencyDiffResult.text;
+          } catch (error) {
+            steps[4].status = 'error';
+            steps[4].error = error instanceof Error ? error.message : 'Unknown error';
+          }
+        })(),
+      );
 
-    // Step 6: Ecosystem-specific analysis
-    analysisPromises.push(
-      (async () => {
-        const ecosystemAgent = getDependencyAnalysisAgent(dependencyInfo.ecosystem || 'unknown');
-        if (!ecosystemAgent) {
-          steps[5].status = 'error';
-          steps[5].error = `No analysis agent available for ecosystem: ${dependencyInfo.ecosystem}`;
-          return;
-        }
+      // Step 6: Ecosystem-specific analysis
+      analysisPromises.push(
+        (async () => {
+          const ecosystemAgent = getDependencyAnalysisAgent(dependencyInfo.ecosystem || 'unknown');
+          if (!ecosystemAgent) {
+            steps[5].status = 'error';
+            steps[5].error = `No analysis agent available for ecosystem: ${dependencyInfo.ecosystem}`;
+            return;
+          }
 
-        steps[5].status = 'running';
-        try {
-          const prompt = `Perform ${dependencyInfo.ecosystem} ecosystem-specific analysis for the dependency upgrade in PR #${prData.prNumber}: "${prData.title}"
+          steps[5].status = 'running';
+          try {
+            const prompt = `Perform ${dependencyInfo.ecosystem} ecosystem-specific analysis for the dependency upgrade in PR #${prData.prNumber}: "${prData.title}"
         
         Repository: ${prData.repository.fullName}
         Dependency: ${dependencyInfo.dependencyName}
@@ -258,18 +260,19 @@ export const GET: APIRoute = async ({ url }) => {
         - Performance impact
         - Migration requirements`;
 
-          const ecosystemResult = await ecosystemAgent.generate(prompt);
-          steps[5].status = 'completed';
-          steps[5].result = ecosystemResult.text;
-        } catch (error) {
-          steps[5].status = 'error';
-          steps[5].error = error instanceof Error ? error.message : 'Unknown error';
-        }
-      })(),
-    );
+            const ecosystemResult = await ecosystemAgent.generate(prompt);
+            steps[5].status = 'completed';
+            steps[5].result = ecosystemResult.text;
+          } catch (error) {
+            steps[5].status = 'error';
+            steps[5].error = error instanceof Error ? error.message : 'Unknown error';
+          }
+        })(),
+      );
 
-    // Wait for all parallel analyses to complete
-    await Promise.all(analysisPromises);
+      // Wait for all parallel analyses to complete
+      await Promise.all(analysisPromises);
+    });
 
     // Step 7: Generate recommendation
     steps[6].status = 'running';
