@@ -32,6 +32,7 @@ const PRDependencyReview: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string>('');
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
   const handleAnalyze = async () => {
     if (!prUrl.trim()) {
@@ -106,6 +107,18 @@ const PRDependencyReview: React.FC = () => {
         return '💎 Ruby';
       default:
         return '❓ Unknown';
+    }
+  };
+
+  const handleCopyMarkdown = async () => {
+    if (!analysis?.recommendation) return;
+
+    try {
+      await navigator.clipboard.writeText(analysis.recommendation);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy markdown:', err);
     }
   };
 
@@ -224,7 +237,12 @@ const PRDependencyReview: React.FC = () => {
 
           {analysis?.recommendation && (
             <div className="recommendation-section">
-              <h3>🎯 Dependency Upgrade Recommendation</h3>
+              <div className="recommendation-header">
+                <h3>🎯 Dependency Upgrade Recommendation</h3>
+                <button onClick={handleCopyMarkdown} className="copy-button" title="Copy markdown to clipboard">
+                  {copySuccess ? '✅ Copied!' : '📋 Copy'}
+                </button>
+              </div>
               <div className="recommendation-content">
                 <ReactMarkdown>{analysis.recommendation}</ReactMarkdown>
               </div>

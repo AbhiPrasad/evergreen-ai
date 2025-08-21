@@ -197,9 +197,11 @@ export const gitDiffTool = createTool({
 function generateUnifiedDiff(compareData: any): string {
   const diffParts: string[] = [];
 
-  // Add header information
-  diffParts.push(`diff --git from ${compareData.base_commit.sha} to ${compareData.head_commit.sha}`);
-  diffParts.push(`Comparing ${compareData.total_commits} commits`);
+  // Add header information with null checks
+  const baseSha = compareData.base_commit?.sha || 'unknown';
+  const headSha = compareData.head_commit?.sha || 'unknown';
+  diffParts.push(`diff --git from ${baseSha} to ${headSha}`);
+  diffParts.push(`Comparing ${compareData.total_commits || 0} commits`);
   diffParts.push('');
 
   // Process each file in the comparison

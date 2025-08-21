@@ -283,12 +283,41 @@
   flex-direction: column;
 }
 
-.recommendation-section h3 {
-  margin: 0 0 1.5rem 0;
-  color: #e2e8f0;
-  font-size: 1.25rem;
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
   border-bottom: 1px solid #475569;
   padding-bottom: 0.75rem;
+}
+
+.recommendation-section h3 {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 1.25rem;
+}
+
+.copy-button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.copy-button:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .recommendation-content {
