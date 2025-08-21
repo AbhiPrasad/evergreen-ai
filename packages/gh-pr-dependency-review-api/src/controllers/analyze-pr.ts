@@ -1,142 +1,21 @@
-import type { APIRoute } from 'astro';
+import { Request, Response } from 'express';
 import {
   githubPRAnalyzerAgent,
   gitDiffSummaryAgent,
   changelogSummaryAgent,
   dependencyUpgradeRecommendationAgent,
-  javascriptTypeScriptDependencyAnalysisAgent,
-  javaDependencyAnalysisAgent,
-  goDependencyAnalysisAgent,
-  pythonDependencyAnalysisAgent,
-  rubyDependencyAnalysisAgent,
 } from '@sentry/evergreen-ai-agents';
+import { AnalysisStep, DependencyInfo } from '../types.js';
+import { detectDependencyUpgrade } from '../services/dependency-detector.js';
+import { getDependencyAnalysisAgent } from '../services/agent-selector.js';
 
-interface AnalysisStep {
-  id: string;
-  name: string;
-  status: 'pending' | 'running' | 'completed' | 'error';
-  result?: any;
-  error?: string;
-}
-
-interface DependencyInfo {
-  isDependencyUpgrade: boolean;
-  ecosystem?: 'javascript' | 'java' | 'go' | 'python' | 'ruby' | 'unknown';
-  dependencyName?: string;
-  oldVersion?: string;
-  newVersion?: string;
-  changeType?: 'major' | 'minor' | 'patch' | 'unknown';
-}
-
-function detectDependencyUpgrade(prData: any): DependencyInfo {
-  const title = prData.title.toLowerCase();
-  const labels = prData.labels ? prData.labels.map((l: any) => l.name?.toLowerCase() || '') : [];
-
-  // Check for common dependency upgrade patterns
-  const dependencyKeywords = [
-    'bump',
-    'update',
-    'upgrade',
-    'dependency',
-    'dependencies',
-    'chore(deps)',
-    'build(deps)',
-    'deps:',
-    'npm update',
-    'yarn upgrade',
-    'go get',
-    'pip install',
-    'bundle update',
-    'mvn dependency',
-  ];
-
-  const isDependencyUpgrade = dependencyKeywords.some(
-    keyword => title.includes(keyword) || labels.some((label: string) => label.includes(keyword)),
-  );
-
-  if (!isDependencyUpgrade) {
-    return { isDependencyUpgrade: false };
-  }
-
-  // Try to detect ecosystem based on title and common patterns
-  let ecosystem: DependencyInfo['ecosystem'] = 'unknown';
-
-  if (
-    title.includes('package.json') ||
-    title.includes('npm') ||
-    title.includes('yarn') ||
-    title.includes('typescript') ||
-    title.includes('javascript')
-  ) {
-    ecosystem = 'javascript';
-  } else if (title.includes('pom.xml') || title.includes('gradle') || title.includes('maven')) {
-    ecosystem = 'java';
-  } else if (title.includes('go.mod') || title.includes('go get')) {
-    ecosystem = 'go';
-  } else if (title.includes('requirements.txt') || title.includes('setup.py') || title.includes('pip')) {
-    ecosystem = 'python';
-  } else if (title.includes('gemfile') || title.includes('bundle')) {
-    ecosystem = 'ruby';
-  }
-
-  // Try to extract dependency name and versions from title
-  let dependencyName: string | undefined;
-  let oldVersion: string | undefined;
-  let newVersion: string | undefined;
-
-  // Pattern: "Bump something from 1.0.0 to 2.0.0"
-  const bumpPattern = /bump\s+([^\s]+)\s+from\s+([^\s]+)\s+to\s+([^\s]+)/i;
-  const bumpMatch = title.match(bumpPattern);
-  if (bumpMatch) {
-    dependencyName = bumpMatch[1];
-    oldVersion = bumpMatch[2];
-    newVersion = bumpMatch[3];
-  }
-
-  // Pattern: "Update something to 2.0.0"
-  const updatePattern = /update\s+([^\s]+)\s+to\s+([^\s]+)/i;
-  const updateMatch = title.match(updatePattern);
-  if (updateMatch && !bumpMatch) {
-    dependencyName = updateMatch[1];
-    newVersion = updateMatch[2];
-  }
-
-  return {
-    isDependencyUpgrade: true,
-    ecosystem,
-    dependencyName,
-    oldVersion,
-    newVersion,
-  };
-}
-
-function getDependencyAnalysisAgent(ecosystem: string) {
-  switch (ecosystem) {
-    case 'javascript':
-      return javascriptTypeScriptDependencyAnalysisAgent;
-    case 'java':
-      return javaDependencyAnalysisAgent;
-    case 'go':
-      return goDependencyAnalysisAgent;
-    case 'python':
-      return pythonDependencyAnalysisAgent;
-    case 'ruby':
-      return rubyDependencyAnalysisAgent;
-    default:
-      return null;
-  }
-}
-
-export const GET: APIRoute = async ({ url }) => {
+export async function analyzePR(req: Request, res: Response) {
   try {
-    const prUrl = url.searchParams.get('prUrl');
+    const prUrl = req.query.prUrl as string;
     console.log('PR URL is required', prUrl);
 
     if (!prUrl) {
-      return new Response(JSON.stringify({ error: 'PR URL is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(400).json({ error: 'PR URL is required' });
     }
 
     const steps: AnalysisStep[] = [
@@ -179,10 +58,7 @@ export const GET: APIRoute = async ({ url }) => {
     } catch (error) {
       steps[0].status = 'error';
       steps[0].error = error instanceof Error ? error.message : 'Unknown error';
-      return new Response(JSON.stringify({ error: steps[0].error, steps }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(400).json({ error: steps[0].error, steps });
     }
 
     const prData = steps[0].result;
@@ -194,17 +70,11 @@ export const GET: APIRoute = async ({ url }) => {
     steps[1].result = dependencyInfo;
 
     if (!dependencyInfo.isDependencyUpgrade) {
-      return new Response(
-        JSON.stringify({
-          error: 'This PR does not appear to be a dependency upgrade',
-          steps,
-          dependencyInfo,
-        }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
+      return res.status(200).json({
+        error: 'This PR does not appear to be a dependency upgrade',
+        steps,
+        dependencyInfo,
+      });
     }
 
     // Steps 3-6: Run parallel analysis
@@ -373,28 +243,16 @@ Please provide a comprehensive recommendation covering:
       steps[6].error = error instanceof Error ? error.message : 'Unknown error';
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        steps,
-        dependencyInfo,
-        recommendation: steps[6].result,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return res.status(200).json({
+      success: true,
+      steps,
+      dependencyInfo,
+      recommendation: steps[6].result,
+    });
   } catch (error) {
     console.error('Error in analyze-pr', error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      },
-    );
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
-};
+}
