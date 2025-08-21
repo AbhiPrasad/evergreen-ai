@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitHub PR Dependency Review
 
-## Getting Started
+An AI-powered tool for analyzing GitHub Pull Requests to identify dependency upgrades and provide comprehensive recommendations.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This package analyzes GitHub PRs to:
+
+1. **Parse GitHub PRs** using the `github-pr-parser` tool to extract comprehensive PR information
+2. **Detect Dependency Upgrades** and identify the programming language ecosystem (JavaScript, Java, Go, Python, Ruby)
+3. **Stop Analysis** if the PR is not a dependency upgrade
+4. **Parallel Analysis** when a dependency upgrade is detected:
+   - **Git Diff Analysis** - Analyzes what dependencies are being upgraded and their impact
+   - **Changelog Summary** - Summarizes what changed in the dependency via its changelog
+   - **Ecosystem-Specific Analysis** - Runs specialized analysis based on the detected ecosystem
+5. **Generate Recommendations** using all gathered information to provide actionable advice
+
+## Workflow
+
+The analysis follows this workflow:
+
+1. **PR Parsing** - Uses `githubPRAnalyzerAgent` to parse the GitHub PR link
+2. **Dependency Detection** - Analyzes PR title, labels, and content to determine if it's a dependency upgrade
+3. **Ecosystem Identification** - Identifies the programming language ecosystem (JS/TS, Java, Go, Python, Ruby)
+4. **Early Exit** - If not a dependency upgrade, stops the analysis
+5. **Parallel Analysis** (Steps 4-7 from requirements):
+   - `gitDiffSummaryAgent` - Analyzes the git diff to understand what changed
+   - `changelogSummaryAgent` - Summarizes dependency changelogs
+   - Ecosystem-specific dependency analysis agent (e.g., `javascriptTypeScriptDependencyAnalysisAgent`)
+6. **Recommendation Generation** - `dependencyUpgradeRecommendationAgent` provides final recommendations
+
+## Supported Ecosystems
+
+- **JavaScript/TypeScript** - package.json, yarn.lock, package-lock.json
+- **Java** - Maven (pom.xml), Gradle (build.gradle), SBT
+- **Go** - go.mod
+- **Python** - requirements.txt, poetry.lock, Pipfile
+- **Ruby** - Gemfile, bundle
+
+## Usage
+
+1. Enter a GitHub PR URL (e.g., `https://github.com/owner/repo/pull/123`)
+2. Click "Analyze PR"
+3. The tool will:
+   - Parse the PR details
+   - Determine if it's a dependency upgrade
+   - If yes, run comprehensive analysis
+   - Provide AI-powered recommendations
+
+## API Endpoints
+
+### POST `/api/analyze-pr`
+
+Analyzes a GitHub PR for dependency upgrades.
+
+**Request Body:**
+```json
+{
+  "prUrl": "https://github.com/owner/repo/pull/123"
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Response:**
+```json
+{
+  "isDependencyUpgrade": boolean,
+  "ecosystem": "javascript" | "java" | "go" | "python" | "ruby",
+  "prAnalysis": { /* PR details */ },
+  "gitDiffSummary": "AI analysis of git diff",
+  "changelogSummary": "AI summary of dependency changes", 
+  "dependencyAnalysis": "Ecosystem-specific analysis",
+  "recommendation": "AI-powered upgrade recommendation"
+}
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Dependencies
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `@sentry/evergreen-ai-agents` - AI agents for analysis
+- `react-markdown` - Markdown rendering for AI responses
+- `clsx` - Conditional CSS classes
+- `next` - React framework
 
-## Learn More
+## Development
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Install dependencies
+npm install
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Run development server
+npm run dev
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Build for production
+npm run build
+```
 
-## Deploy on Vercel
+## Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The GitHub PR parser may require authentication for private repositories:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `GITHUB_TOKEN`
+- `GH_TOKEN` 
+- `GITHUB_ACCESS_TOKEN`
+
+Any of these environment variables can be used to provide GitHub API access.
