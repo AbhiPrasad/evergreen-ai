@@ -51,8 +51,7 @@ const PRDependencyReview: React.FC = () => {
 
     try {
       console.log('prUrl', prUrl);
-      const apiBaseUrl = import.meta.env.PUBLIC_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiBaseUrl}/api/analyze-pr?prUrl=${encodeURIComponent(prUrl.trim())}`, {
+      const response = await fetch(`/api/analyze-pr?prUrl=${encodeURIComponent(prUrl.trim())}`, {
         method: 'GET',
       });
 
