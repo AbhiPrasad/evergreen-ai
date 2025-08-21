@@ -1,4 +1,4 @@
-import { githubPRParserTool, gitDiffTool, gitDiffSummaryAgent } from '@evergreen-ai/mastra';
+import { githubPRParserTool, gitDiffTool, gitDiffSummaryAgent } from '@sentry/evergreen-ai-agents';
 
 /**
  * Example: Analyzing a GitHub PR using the integrated tools

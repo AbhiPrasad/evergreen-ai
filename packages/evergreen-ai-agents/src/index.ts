@@ -6,6 +6,7 @@ import { gitDiffSummaryAgent } from './agents/git-diff-summary-agent';
 import { javascriptTypeScriptDependencyAnalysisAgent } from './agents/js-ts-dependency-analysis-agent';
 import { javaDependencyAnalysisAgent } from './agents/java-dependency-analysis-agent';
 import { dependencyUpgradeRecommendationAgent } from './agents/dependency-upgrade-recommendation-agent';
+import { githubPRAnalyzerAgent } from './agents/github-pr-analyzer-agent';
 import { fetchChangelogTool } from './tools/fetch-changelog-tool';
 import { gitDiffTool } from './tools/git-diff-tool';
 import { githubPRParserTool } from './tools/github-pr-parser-tool';
@@ -88,6 +89,7 @@ export {
   pythonDependencyAnalysisAgent,
   rubyDependencyAnalysisAgent,
   dependencyUpgradeRecommendationAgent,
+  githubPRAnalyzerAgent,
 };
 
 // Export types from agents

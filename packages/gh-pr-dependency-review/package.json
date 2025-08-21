@@ -1,0 +1,28 @@
+{
+  "name": "gh-pr-dependency-review",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9.4.2",
+    "@astrojs/react": "^3.6.2",
+    "@sentry/evergreen-ai-agents": "0.0.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "astro": "^5.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^9.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.3",
+    "typescript": "^5.5.4"
+  }
+}
