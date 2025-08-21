@@ -242,7 +242,7 @@ const SentrySDKSelector: React.FC = () => {
   return (
     <div className="sdk-selector">
       {error && <div className="error-message">{error}</div>}
-      
+
       <div className="main-layout">
         <div className="left-panel">
           <div className="selectors-container">
@@ -369,7 +369,10 @@ const SentrySDKSelector: React.FC = () => {
             <>
               {startVersion === endVersion ? (
                 <div className="same-version-notice">
-                  <p>Both versions are the same. Please select different starting and target versions to see the changelog summary.</p>
+                  <p>
+                    Both versions are the same. Please select different starting and target versions to see the
+                    changelog summary.
+                  </p>
                 </div>
               ) : (
                 <div className="changelog-summary">
@@ -383,18 +386,18 @@ const SentrySDKSelector: React.FC = () => {
                   {summaryError && (
                     <div className="error-message">
                       <strong>Error:</strong> {summaryError}
-                      <button 
-                        onClick={fetchChangelogSummary}
-                        className="retry-button"
-                        type="button"
-                      >
+                      <button onClick={fetchChangelogSummary} className="retry-button" type="button">
                         Retry
                       </button>
                     </div>
                   )}
                   {changelogSummary && !summaryLoading && (
                     <div className="summary-content">
-                      <ReactMarkdown className="markdown-content">
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="markdown-content">{children}</p>,
+                        }}
+                      >
                         {changelogSummary}
                       </ReactMarkdown>
                     </div>

@@ -226,7 +226,11 @@ const PRDependencyReview: React.FC = () => {
             <div className="recommendation-section">
               <h3>🎯 Dependency Upgrade Recommendation</h3>
               <div className="recommendation-content">
-                <ReactMarkdown className="markdown-content">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="markdown-content">{children}</p>,
+                  }}
+                >
                   {typeof analysis.recommendation === 'string'
                     ? analysis.recommendation
                     : JSON.stringify(analysis.recommendation, null, 2)}
