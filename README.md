@@ -75,7 +75,7 @@ Web application for comparing Sentry SDK changelog versions with AI-powered summ
 cd packages/sentry-sdk-selector
 npm install
 npm run dev
-# Visit http://localhost:4321
+# Visit http://localhost:4322
 ```
 
 Optional:

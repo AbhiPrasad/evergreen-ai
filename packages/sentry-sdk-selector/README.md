@@ -1,6 +1,7 @@
 # Sentry SDK Selector
 
-A modern web application built with Astro and React that allows users to select Sentry SDKs and compare versions using the Sentry Release Registry API.
+A modern web application built with Astro and React that allows users to select Sentry SDKs and compare versions using
+the Sentry Release Registry API.
 
 ## Features
 
@@ -38,7 +39,7 @@ npm run preview
 npm run clean
 ```
 
-The development server will start at `http://localhost:4321`.
+The development server will start at `http://localhost:4322`.
 
 ### From Workspace Root
 
@@ -68,6 +69,7 @@ npm run build --workspace=sentry-sdk-selector
    - Clear button (×) to reset your selection and start over
 
 ### Keyboard Shortcuts
+
 - **Arrow Up/Down**: Navigate through SDK search results
 - **Enter**: Select the highlighted SDK
 - **Escape**: Close the dropdown without selecting
