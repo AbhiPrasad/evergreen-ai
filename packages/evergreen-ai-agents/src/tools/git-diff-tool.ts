@@ -1,6 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { execSync } from 'node:child_process';
+import { Octokit } from '@octokit/rest';
 
 // Define the schema for commit info
 const commitInfoSchema = z.object({
@@ -30,250 +30,256 @@ const diffStatsSchema = z.object({
 
 export type DiffStats = z.infer<typeof diffStatsSchema>;
 
-// Tool for generating git diffs
+// Helper function to parse GitHub repository URL
+function parseGitHubRepoUrl(url: string): { owner: string; repo: string } | null {
+  // Support multiple GitHub URL formats
+  const patterns = [
+    /^https:\/\/github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?(?:\/.*)?$/,
+    /^git@github\.com:([^\/]+)\/([^\/]+?)(?:\.git)?$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return {
+        owner: match[1],
+        repo: match[2],
+      };
+    }
+  }
+  return null;
+}
+
+// Helper function to validate GitHub repository URL
+function isValidGitHubRepoUrl(url: string): boolean {
+  return parseGitHubRepoUrl(url) !== null;
+}
+
+// Tool for generating git diffs from GitHub repositories
 export const gitDiffTool = createTool({
   id: 'git-diff',
-  description: 'Generates git diff for a branch or between two commits/branches',
+  description: 'Generates git diff from GitHub repositories using the GitHub API to compare branches or commits',
   inputSchema: z.object({
-    repository: z.string().describe('Path to the git repository (default: current directory)').optional(),
-    base: z.string().describe('Base branch/commit to compare from (e.g., main, HEAD~1, commit SHA)').optional(),
-    compare: z.string().describe('Branch/commit to compare to (e.g., feature-branch, HEAD, commit SHA)').optional(),
-    filePath: z.string().describe('Specific file or directory path to diff').optional(),
-    includeContext: z.number().default(3).describe('Number of context lines around changes'),
-    diffType: z
-      .enum(['unified', 'name-only', 'name-status', 'stat'])
-      .default('unified')
-      .describe('Type of diff output'),
-    excludePatterns: z
-      .array(z.string())
+    repositoryUrl: z
+      .string()
+      .describe('GitHub repository URL (e.g., https://github.com/owner/repo or git@github.com:owner/repo.git)'),
+    base: z.string().describe('Base branch/commit to compare from (e.g., main, commit SHA)'),
+    compare: z.string().describe('Branch/commit to compare to (e.g., feature-branch, commit SHA)'),
+    githubToken: z
+      .string()
       .optional()
-      .describe('Patterns to exclude from diff (e.g., ["*.log", "node_modules/"])'),
+      .describe(
+        'GitHub personal access token for authentication (optional for public repos). If not provided, will check GITHUB_TOKEN, GH_TOKEN, or GITHUB_ACCESS_TOKEN environment variables',
+      ),
   }),
   outputSchema: z.object({
     diff: z.string().describe('Raw git diff output'),
     stats: diffStatsSchema.describe('Parsed diff statistics'),
-    repository: z.string().describe('Repository path used for the diff'),
+    repository: z.string().describe('GitHub repository URL used for the diff'),
     base: z.string().describe('Base reference (branch/commit) used'),
     compare: z.string().describe('Compare reference (branch/commit) used'),
-    currentBranch: z.string().describe('Current git branch name'),
     commitInfo: z
       .object({
         base: commitInfoSchema.optional(),
         compare: commitInfoSchema.optional(),
       })
-      .describe('Commit information for base and compare if applicable'),
-    diffType: z.enum(['unified', 'name-only', 'name-status', 'stat']).describe('Type of diff that was generated'),
-    command: z.string().describe('The git command that was executed'),
+      .describe('Commit information for base and compare references'),
+    apiUrl: z.string().describe('GitHub API URL that was used to fetch the diff'),
+    behindBy: z.number().optional().describe('Number of commits base is behind compare'),
+    aheadBy: z.number().optional().describe('Number of commits base is ahead of compare'),
   }),
   execute: async ({ context }) => {
-    const { repository = '.', base, compare, filePath, includeContext, diffType, excludePatterns } = context;
+    const { repositoryUrl, base, compare, githubToken } = context;
 
     try {
-      // Build the git diff command
-      let command = 'git';
-
-      // Add repository path if specified
-      if (repository !== '.') {
-        command += ` -C "${repository}"`;
+      // Validate GitHub repository URL
+      if (!isValidGitHubRepoUrl(repositoryUrl)) {
+        throw new Error(
+          `Invalid GitHub repository URL: "${repositoryUrl}". Expected format: https://github.com/owner/repo or git@github.com:owner/repo.git`,
+        );
       }
 
-      command += ' diff';
-
-      // Add diff type options
-      switch (diffType) {
-        case 'name-only':
-          command += ' --name-only';
-          break;
-        case 'name-status':
-          command += ' --name-status';
-          break;
-        case 'stat':
-          command += ' --stat';
-          break;
-        default:
-          command += ` -U${includeContext}`; // unified diff with context lines
+      // Parse repository URL to get owner and repo
+      const repoInfo = parseGitHubRepoUrl(repositoryUrl);
+      if (!repoInfo) {
+        throw new Error(`Failed to parse GitHub repository URL: ${repositoryUrl}`);
       }
 
-      // Add exclude patterns
-      if (excludePatterns && excludePatterns.length > 0) {
-        excludePatterns.forEach(pattern => {
-          command += ` -- . ":!${pattern}"`;
-        });
-      }
+      const { owner, repo } = repoInfo;
 
-      // Determine what to diff
-      if (base && compare) {
-        // Diff between two specific commits/branches
-        command += ` ${base}...${compare}`;
-      } else if (base) {
-        // Diff from base to current working directory
-        command += ` ${base}`;
-      } else if (compare) {
-        // Diff from HEAD to compare branch/commit
-        command += ` HEAD...${compare}`;
-      }
-      // If neither base nor compare is specified, it will show unstaged changes
+      // Get auth token from parameter or environment variables
+      const authToken =
+        githubToken || process.env.GITHUB_TOKEN || process.env.GH_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
 
-      // Add specific file path if provided
-      if (filePath) {
-        command += ` -- "${filePath}"`;
-      }
-
-      // Execute the git diff command
-      const diffOutput = execSync(command, {
-        encoding: 'utf-8',
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large diffs
+      // Create Octokit instance
+      const octokit = new Octokit({
+        auth: authToken,
       });
 
-      // Parse the diff output to extract useful information
-      const diffStats = parseDiffStats(diffOutput, diffType);
+      // Use GitHub's compare API to get the diff
+      const compareResponse = await octokit.rest.repos.compareCommits({
+        owner,
+        repo,
+        base,
+        head: compare,
+      });
 
-      // Get additional git information
-      let currentBranch = '';
-      let commitInfo = {};
+      const compareData = compareResponse.data;
+
+      // Fetch commit details for base and compare
+      const commitInfo: any = {};
 
       try {
-        currentBranch = execSync(`git -C "${repository}" branch --show-current`, { encoding: 'utf-8' }).trim();
+        // Get base commit info
+        const baseCommitResponse = await octokit.rest.repos.getCommit({
+          owner,
+          repo,
+          ref: base,
+        });
+        const baseCommit = baseCommitResponse.data;
+        commitInfo.base = {
+          hash: baseCommit.sha,
+          subject: baseCommit.commit.message.split('\n')[0],
+          author: baseCommit.commit.author?.name || 'Unknown',
+          date: baseCommit.commit.author?.date || '',
+        };
 
-        // Get commit info if comparing specific commits
-        if (base) {
-          const baseCommit = execSync(`git -C "${repository}" log -1 --format="%H|%s|%an|%ad" ${base}`, {
-            encoding: 'utf-8',
-          }).trim();
-          const [hash, subject, author, date] = baseCommit.split('|');
-          commitInfo = {
-            base: { hash, subject, author, date },
-          };
-        }
-
-        if (compare) {
-          const compareCommit = execSync(`git -C "${repository}" log -1 --format="%H|%s|%an|%ad" ${compare}`, {
-            encoding: 'utf-8',
-          }).trim();
-          const [hash, subject, author, date] = compareCommit.split('|');
-          commitInfo = {
-            ...commitInfo,
-            compare: { hash, subject, author, date },
-          };
-        }
+        // Get compare commit info
+        const compareCommitResponse = await octokit.rest.repos.getCommit({
+          owner,
+          repo,
+          ref: compare,
+        });
+        const compareCommit = compareCommitResponse.data;
+        commitInfo.compare = {
+          hash: compareCommit.sha,
+          subject: compareCommit.commit.message.split('\n')[0],
+          author: compareCommit.commit.author?.name || 'Unknown',
+          date: compareCommit.commit.author?.date || '',
+        };
       } catch (err) {
-        // Ignore errors for additional info
+        // Continue without commit info if fetch fails
+        console.warn('Failed to fetch commit details:', err);
       }
+
+      // Generate unified diff from GitHub API data
+      const diffOutput = generateUnifiedDiff(compareData);
+
+      // Parse the diff statistics
+      const diffStats = parseGitHubDiffStats(compareData);
+
+      // Build the API URL for reference
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/compare/${base}...${compare}`;
 
       return {
         diff: diffOutput,
         stats: diffStats,
-        repository: repository === '.' ? 'current directory' : repository,
-        base: base || 'working directory',
-        compare: compare || 'HEAD',
-        currentBranch,
+        repository: repositoryUrl,
+        base,
+        compare,
         commitInfo,
-        diffType,
-        command: command.replace(/\s+/g, ' ').trim(), // Clean up the command for display
+        apiUrl,
+        behindBy: compareData.behind_by,
+        aheadBy: compareData.ahead_by,
       };
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.status === 404 || (error instanceof Error && error.message.includes('404'))) {
+        throw new Error(
+          `Repository, branch, or commit not found. Please check that the repository URL is correct and the base/compare references exist. If this is a private repository, ensure you have proper authentication.`,
+        );
+      }
       throw new Error(`Failed to generate git diff: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
 });
 
-// Helper function to parse diff statistics
-function parseDiffStats(diffOutput: string, diffType: string): DiffStats {
+// Helper function to generate unified diff from GitHub API compare data
+function generateUnifiedDiff(compareData: any): string {
+  const diffParts: string[] = [];
+
+  // Add header information
+  diffParts.push(`diff --git from ${compareData.base_commit.sha} to ${compareData.head_commit.sha}`);
+  diffParts.push(`Comparing ${compareData.total_commits} commits`);
+  diffParts.push('');
+
+  // Process each file in the comparison
+  for (const file of compareData.files || []) {
+    // Add file header
+    diffParts.push(`diff --git a/${file.filename} b/${file.filename}`);
+
+    if (file.status === 'added') {
+      diffParts.push('new file mode 100644');
+      diffParts.push(`index 0000000..${file.sha?.substring(0, 7) || 'unknown'}`);
+      diffParts.push(`--- /dev/null`);
+      diffParts.push(`+++ b/${file.filename}`);
+    } else if (file.status === 'removed') {
+      diffParts.push('deleted file mode 100644');
+      diffParts.push(`index ${file.sha?.substring(0, 7) || 'unknown'}..0000000`);
+      diffParts.push(`--- a/${file.filename}`);
+      diffParts.push(`+++ /dev/null`);
+    } else if (file.status === 'renamed') {
+      diffParts.push(`similarity index ${file.similarity || 100}%`);
+      diffParts.push(`rename from ${file.previous_filename || file.filename}`);
+      diffParts.push(`rename to ${file.filename}`);
+    } else {
+      diffParts.push(
+        `index ${file.sha?.substring(0, 7) || 'unknown'}..${file.sha?.substring(0, 7) || 'unknown'} 100644`,
+      );
+      diffParts.push(`--- a/${file.filename}`);
+      diffParts.push(`+++ b/${file.filename}`);
+    }
+
+    // Add patch content if available
+    if (file.patch) {
+      diffParts.push(file.patch);
+    } else {
+      diffParts.push(`@@ -0,0 +0,0 @@ File changed: +${file.additions || 0} -${file.deletions || 0}`);
+    }
+
+    diffParts.push(''); // Empty line between files
+  }
+
+  return diffParts.join('\n');
+}
+
+// Helper function to parse GitHub API diff statistics
+function parseGitHubDiffStats(compareData: any): DiffStats {
   const stats: DiffStats = {
-    filesChanged: 0,
+    filesChanged: compareData.files?.length || 0,
     insertions: 0,
     deletions: 0,
     files: [],
   };
 
-  if (diffType === 'name-only') {
-    const files = diffOutput
-      .trim()
-      .split('\n')
-      .filter(line => line);
-    stats.filesChanged = files.length;
-    stats.files = files.map(path => ({ path, status: 'modified' as const }));
-  } else if (diffType === 'name-status') {
-    const lines = diffOutput
-      .trim()
-      .split('\n')
-      .filter(line => line);
-    stats.filesChanged = lines.length;
-    stats.files = lines.map(line => {
-      const [statusCode, ...pathParts] = line.split('\t');
-      const path = pathParts.join('\t');
-      let status: FileChange['status'] = 'modified';
-      switch (statusCode) {
-        case 'A':
-          status = 'added';
-          break;
-        case 'D':
-          status = 'deleted';
-          break;
-        case 'M':
-          status = 'modified';
-          break;
-        case 'R':
-          status = 'renamed';
-          break;
-      }
-      return { path, status };
+  // Process files from GitHub API response
+  for (const file of compareData.files || []) {
+    stats.insertions += file.additions || 0;
+    stats.deletions += file.deletions || 0;
+
+    let status: FileChange['status'] = 'modified';
+    switch (file.status) {
+      case 'added':
+        status = 'added';
+        break;
+      case 'removed':
+        status = 'deleted';
+        break;
+      case 'modified':
+        status = 'modified';
+        break;
+      case 'renamed':
+        status = 'renamed';
+        break;
+      default:
+        status = 'modified';
+    }
+
+    stats.files.push({
+      path: file.filename,
+      status,
+      insertions: file.additions || 0,
+      deletions: file.deletions || 0,
     });
-  } else if (diffType === 'stat') {
-    // Parse stat output
-    const lines = diffOutput.trim().split('\n');
-    const summaryLine = lines[lines.length - 1];
-    const summaryMatch = summaryLine.match(
-      /(\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?/,
-    );
-
-    if (summaryMatch) {
-      stats.filesChanged = parseInt(summaryMatch[1]) || 0;
-      stats.insertions = parseInt(summaryMatch[2]) || 0;
-      stats.deletions = parseInt(summaryMatch[3]) || 0;
-    }
-
-    // Parse individual file stats
-    for (let i = 0; i < lines.length - 1; i++) {
-      const line = lines[i];
-      const match = line.match(/^\s*(.+?)\s+\|\s+(\d+)\s+([\+\-]+)/);
-      if (match) {
-        const [, path, , indicators] = match;
-        const insertions = (indicators.match(/\+/g) || []).length;
-        const deletions = (indicators.match(/-/g) || []).length;
-        stats.files.push({
-          path: path.trim(),
-          status: 'modified',
-          insertions,
-          deletions,
-        });
-      }
-    }
-  } else {
-    // Parse unified diff
-    const lines = diffOutput.split('\n');
-    const fileSet = new Set<string>();
-    let currentFile = '';
-
-    for (const line of lines) {
-      if (line.startsWith('diff --git')) {
-        const match = line.match(/diff --git a\/(.+) b\/(.+)/);
-        if (match) {
-          currentFile = match[2];
-          fileSet.add(currentFile);
-        }
-      } else if (line.startsWith('+') && !line.startsWith('+++')) {
-        stats.insertions++;
-      } else if (line.startsWith('-') && !line.startsWith('---')) {
-        stats.deletions++;
-      }
-    }
-
-    stats.filesChanged = fileSet.size;
-    stats.files = Array.from(fileSet).map(path => ({
-      path,
-      status: 'modified' as const,
-    }));
   }
 
   return stats;

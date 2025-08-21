@@ -4,9 +4,9 @@ import {
   gitDiffSummaryAgent,
   changelogSummaryAgent,
   dependencyUpgradeRecommendationAgent,
+  githubPREcosystemDetectorAgent,
 } from '@sentry/evergreen-ai-agents';
 import type { AnalysisStep } from '../../lib/types.js';
-import { detectDependencyUpgrade } from '../../lib/dependency-detector.js';
 import { getDependencyAnalysisAgent } from '../../lib/agent-selector.js';
 
 export const GET: APIRoute = async ({ url }) => {
@@ -72,11 +72,68 @@ export const GET: APIRoute = async ({ url }) => {
 
     const prData = steps[0].result;
 
-    // Step 2: Detect if this is a dependency upgrade
+    // Step 2: Detect ecosystem and dependency upgrade using AI agent
     steps[1].status = 'running';
-    const dependencyInfo = detectDependencyUpgrade(prData);
-    steps[1].status = 'completed';
-    steps[1].result = dependencyInfo;
+    let dependencyInfo;
+    try {
+      const ecosystemPrompt = `Please analyze the GitHub PR for ecosystem detection and dependency upgrade information: ${prUrl}
+      
+      Use the provided tools to:
+      1. Parse the GitHub PR details
+      2. Analyze the git diff to identify changed files
+      3. Detect the programming language ecosystem
+      4. Extract dependency upgrade information
+      
+      Return comprehensive ecosystem and dependency analysis in JSON format.`;
+
+      const ecosystemResult = await githubPREcosystemDetectorAgent.generate(ecosystemPrompt);
+
+      // Extract JSON from the response
+      let ecosystemData;
+      try {
+        const jsonMatch = ecosystemResult.text.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          ecosystemData = JSON.parse(jsonMatch[1]);
+        } else {
+          // Try to parse the entire response as JSON
+          ecosystemData = JSON.parse(ecosystemResult.text);
+        }
+      } catch (parseError) {
+        throw new Error('Failed to parse ecosystem data from agent response');
+      }
+
+      // Convert to DependencyInfo format for compatibility
+      dependencyInfo = {
+        isDependencyUpgrade: ecosystemData.isDependencyUpgrade || false,
+        ecosystem: ecosystemData.ecosystem || 'unknown',
+        dependencyName: ecosystemData.dependencyInfo?.name,
+        oldVersion: ecosystemData.dependencyInfo?.oldVersion,
+        newVersion: ecosystemData.dependencyInfo?.newVersion,
+        changeType: ecosystemData.dependencyInfo?.changeType,
+        confidence: ecosystemData.confidence,
+        detectedFiles: ecosystemData.detectedFiles,
+        ecosystemDetails: ecosystemData.ecosystemDetails,
+      };
+
+      steps[1].status = 'completed';
+      steps[1].result = dependencyInfo;
+    } catch (error) {
+      steps[1].status = 'error';
+      steps[1].error = error instanceof Error ? error.message : 'Unknown error';
+
+      // Set fallback dependency info
+      dependencyInfo = {
+        isDependencyUpgrade: false,
+        ecosystem: 'unknown',
+      };
+
+      return new Response(JSON.stringify({ error: steps[1].error, steps }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
 
     if (!dependencyInfo.isDependencyUpgrade) {
       return new Response(

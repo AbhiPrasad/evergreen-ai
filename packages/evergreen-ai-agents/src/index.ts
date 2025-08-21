@@ -7,6 +7,7 @@ import { javascriptTypeScriptDependencyAnalysisAgent } from './agents/js-ts-depe
 import { javaDependencyAnalysisAgent } from './agents/java-dependency-analysis-agent';
 import { dependencyUpgradeRecommendationAgent } from './agents/dependency-upgrade-recommendation-agent';
 import { githubPRAnalyzerAgent } from './agents/github-pr-analyzer-agent';
+import { githubPREcosystemDetectorAgent } from './agents/github-pr-ecosystem-detector-agent';
 import { fetchChangelogTool } from './tools/fetch-changelog-tool';
 import { gitDiffTool } from './tools/git-diff-tool';
 import { githubPRParserTool } from './tools/github-pr-parser-tool';
@@ -37,6 +38,7 @@ export const mastra = new Mastra({
     pythonDependencyAnalysisAgent,
     rubyDependencyAnalysisAgent,
     dependencyUpgradeRecommendationAgent,
+    githubPREcosystemDetectorAgent,
   },
   storage: new LibSQLStore({
     // stores telemetry, evals, ... into memory storage, if it needs to persist, change to file:../mastra.db
@@ -90,6 +92,7 @@ export {
   rubyDependencyAnalysisAgent,
   dependencyUpgradeRecommendationAgent,
   githubPRAnalyzerAgent,
+  githubPREcosystemDetectorAgent,
 };
 
 // Export types from agents
